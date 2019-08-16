@@ -1,0 +1,10 @@
+<library path="lib/libvino_pipeline_graph">
+  <class name="vino_pipeline_graph/OpenVino_Pipeline_Panel"
+         type="vino_pipeline_graph::MainPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A visualization tool of ros openvino pipeline graph
+    </description>
+  </class>
+  
+</library>
