@@ -9,9 +9,12 @@
 #include <QPainter>
 #include <QString>
 #include <QLine>
+#include <QMessageBox>
+#include <QVector>
+#include <QPolygon>
 #define RECT_HEIGHT 30.0
 #define RECT_WIDTH 115.0
-
+#define LINE_WIDTH_THRESHOLD 3
 namespace vino_pipeline_graph{
     class UIPipelineEdge: public PipelineEdge
     {
@@ -24,6 +27,25 @@ namespace vino_pipeline_graph{
             PipelineEdge(from,to),
             color(0,0,0)
             {}
+        bool contains(QPoint p)
+        {
+            int x1 = line.x1();
+            int y1 = line.y1();
+            int x2 = line.x2();
+            int y2 = line.y2();
+
+           
+            float k = (y2-y1)/(x2-x1+ 1e-15);
+            float b = y1 - k * x1;
+           
+            float dist = abs( (k* p.x() - p.y() + b)/sqrt(k*k+1));
+            std::cout << "dist: " << dist << std::endl; 
+            if(dist < LINE_WIDTH_THRESHOLD )
+                return true;
+            else 
+                return false;
+            
+        }
     }; 
 
     class UIPipelineNode: public PipelineNode
@@ -93,9 +115,12 @@ namespace vino_pipeline_graph{
             //draw isolated node
             for(int i=0;i<getNumIsolatedNode(); i++)
             {
-                drawNode((UIPipelineNode *)isolated_node_list_[i]);
+                traverseDrawNode((UIPipelineNode *)isolated_node_list_[i]);
+                traverseDrawEdge((UIPipelineNode *)isolated_node_list_[i]);
             }
-
+            std::cout <<"-----------------" << std::endl;
+            
+            
         }
 
         void setCanvasSize(int canvas_width, int canvas_height)
@@ -120,8 +145,8 @@ namespace vino_pipeline_graph{
             painter.setPen(pen);
 
             
-            UIPipelineNode * node_from =(UIPipelineNode *) (root_->findChildByName(edge->getFrom()));
-            UIPipelineNode * node_to =(UIPipelineNode *) (root_->findChildByName(edge->getTo()));
+            UIPipelineNode * node_from =(UIPipelineNode *) ((root_->findChildByName(edge->getFrom())) ? root_->findChildByName(edge->getFrom()): findIsolatedNode(edge->getFrom()) );
+            UIPipelineNode * node_to =(UIPipelineNode *) (root_->findChildByName(edge->getTo())? root_->findChildByName(edge->getTo()) :findIsolatedNode(edge->getTo ()));
             if( node_from != NULL && node_to != NULL)
             {
                 // std::cout << node_from->getNodeName() << " (---->) " << node_to->getNodeName()<< std::endl;
@@ -243,9 +268,8 @@ namespace vino_pipeline_graph{
           
             for(int i=0;i< node->getChilds().size(); i++)
             {
-
+                
                 UIPipelineNode * node_child =  (UIPipelineNode *) (node->getChilds()[i]);   
-               
                 traverseDrawEdge(node_child);
              
             }
@@ -254,9 +278,9 @@ namespace vino_pipeline_graph{
 
 
         UIPipelineNode * selectNodeByPos(UIPipelineNode * node,QPoint mouse_pos){
-            
             if(node->rect.contains(mouse_pos)){
                 std::cout << node->getNodeName() << std::endl;
+                node->color.setRgb(125,125,125,255);
                 return node;
             }
             if (node->getChilds().size() == 0 ) return NULL;
@@ -265,12 +289,39 @@ namespace vino_pipeline_graph{
             {
                 UIPipelineNode * node_child =  (UIPipelineNode *) (node->getChilds()[i]);   
                 UIPipelineNode * selected_node = selectNodeByPos(node_child,mouse_pos);
-                if (NULL!= selected_node) return selected_node; 
+                if (NULL!= selected_node) 
+                {
+                    selected_node->color.setRgb(125, 125, 125, 255);
+                    return selected_node; 
+                }
             }
             return NULL;
         }
 
-        
+       
+
+        UIPipelineEdge * selectEdgeByPos(UIPipelineNode * node,QPoint mouse_pos){
+               
+                
+                for(int j=0;j< node->getNumOfEdges();j++ )
+                {
+                    UIPipelineEdge * edge =(UIPipelineEdge *)(node->getEdges()[j]);
+                    bool isContained =  edge->contains(mouse_pos);
+                    if(isContained) return edge;
+                
+                }
+
+                // if(node->getNumOfChildNodes()==0) return NULL;
+                for(int i=0;i<node->getNumOfChildNodes();i++)
+                {
+                    UIPipelineNode *  node_child =(UIPipelineNode * )(node->getChilds()[i]);
+                    UIPipelineEdge * edge = selectEdgeByPos(node_child,mouse_pos);
+                    if(edge != NULL) return edge;
+                }
+                return NULL;
+
+          
+        }     
     
 
         void drawMovedNode(QPoint mouse_pos_press,QPoint mouse_pos_release)
@@ -298,25 +349,65 @@ namespace vino_pipeline_graph{
         }
         void selectdNode(QPoint mouse_pos)
         {
+            std::cout << "There are " << getNumIsolatedNode() << " isolated node." << std::endl;
+
+            //reinitiate color of selected node
+             if(selected_node)
+            {
+                selected_node->color.setRgb(255,255,255,255);
+            }
+
+            for(int i=0; i < getNumIsolatedNode(); i++)
+            {
+                auto isolated_node = selectNodeByPos((UIPipelineNode *)isolated_node_list_[i], mouse_pos) ;
+                if(isolated_node){
+                    std::cout << isolated_node->getNodeName() << std::endl;
+                    selected_node = isolated_node;
+                    //set focus color
+                    selected_node->color.setRgb(124,125,125,255);
+                    return;
+                }   
+            }
+
+           
+
             selected_node = selectNodeByPos((UIPipelineNode *)root_, mouse_pos) ;
             if (selected_node  == NULL){
                 std::cout << "[select]cannot find this node return!!" << std::endl;
                 return;
             }           
             std::cout << "find at: " << selected_node->getNodeName() << std::endl;
-        }
-        void selectdNode(std::string node_name)
-        {
-            selected_node = (UIPipelineNode *)(root_->findChildByName(node_name));
-            if (selected_node  == NULL){
-                std::cout << "[select]cannot find this node return!!" << std::endl;
-                return;
-            }           
-            std::cout << "find at: " << selected_node->getNodeName() << std::endl;
+
+            
         }
 
-        
-    
+        void selectdEdge(QPoint mouse_pos)
+        {
+           
+            UIPipelineEdge * edge = selectEdgeByPos((UIPipelineNode *)root_, mouse_pos) ;
+            if(edge)
+            std::cout << "select an edge: "<< edge->getFrom() << " --> " << edge->getTo() << std::endl;
+           
+            
+        }
+        void AddNewNode(std::string node_name)
+        {
+            if(root_->findChildByName(node_name) || findIsolatedNode(node_name))
+            {
+                
+                 QMessageBox message(QMessageBox::NoIcon, "Failed", "Create faield, node duplicated!"); 
+                message.exec();
+
+                return;
+            }
+            makeNode(node_name);
+            
+        }
+
+        void RemoveSelectedNode()
+        {
+            removeNode(selected_node->getNodeName());
+        }
         bool checkIntersection(QRect rect, std::string node1_name,  UIPipelineNode * node2)
         {
             //if it is the samenode

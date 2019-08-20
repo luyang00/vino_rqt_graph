@@ -43,7 +43,7 @@ public:
 
   virtual void resizeEvent( QResizeEvent * event);
   // We emit outputVelocity() whenever it changes.
-
+  void draw(){update();}
 
 
 Q_SIGNALS:

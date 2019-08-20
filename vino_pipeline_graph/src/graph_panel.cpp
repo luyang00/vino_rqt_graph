@@ -97,6 +97,10 @@ void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
         pos_mouse_press  = event->pos();
 
         graph->selectdNode(event->pos());
+
+
+        graph->selectdEdge(event->pos());
+        update();
 		//setMouseState( Qt::MouseState::L_C, 0);
 	}
 }

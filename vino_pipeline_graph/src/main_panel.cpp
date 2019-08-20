@@ -121,8 +121,10 @@ void MainPanel::load( const rviz::Config& config )
       {
           std::string node_name = new_node_dialog.textValue().toStdString();
  
-          // pipeline_widget->graph->selectdNode(node_name);
+          pipeline_widget->graph->AddNewNode(node_name);
       }
+      pipeline_widget->draw();
+     
   }
   void MainPanel::addEdgeBtnHandler(void)
   {
@@ -130,7 +132,8 @@ void MainPanel::load( const rviz::Config& config )
   }
   void MainPanel::removeBtnHandler(void)
   {
-    
+      pipeline_widget->graph->RemoveSelectedNode();
+      pipeline_widget->draw();
   }
 
 } // end namespace vino_pipeline_graph

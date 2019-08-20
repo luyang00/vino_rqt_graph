@@ -157,10 +157,14 @@ void Graph::addIsolatedNode(Node * node)
     if(node == NULL) 
         return;
     //if a node still has a link after removing one, keep it not isolated
-    else if (node->getNumOfEdges()>0) 
-        return;
+    else if (node->getNumOfEdges()>0)
+     {  
+         std::cout << "!!!!!!!return " << std::endl;
+         return;
+     }
     else
     {
+        std::cout << "push !!!!" << std::endl;
     isolated_node_list_.push_back(node);
     }
 }
@@ -168,8 +172,8 @@ void Graph::addIsolatedNode(Node * node)
 void Graph::removeIsolatedNode(Node * node)
 {
     if(node == NULL) return;
-    std::cout << "edges: "<< node->getNumOfEdges() << " nodes:" << node->getNumOfChildNodes() << std::endl;
-    if(node->getNumOfEdges()>0 && node->getNumOfChildNodes()>0 )
+    // std::cout << "edges: "<< node->getNumOfEdges() << " nodes:" << node->getNumOfChildNodes() << std::endl;
+    if(node->getNumOfEdges()>0 )
     {
         for(std::vector<Node*>::iterator it =  isolated_node_list_.begin(); it!=  isolated_node_list_.end(); ++it )
         {
@@ -188,6 +192,9 @@ Node * Graph::findIsolatedNode(std::string node_name)
     {
         if ( node_name == (*it)->getNodeName()){
             return (*it);
+        }
+        else if((*it)->findChildByName(node_name)){
+            return ((*it)->findChildByName(node_name));
         }
     }
     return NULL;
@@ -221,6 +228,7 @@ Node * Graph::makeNode(std::string node_name)
     }
     else
     {
+       
         Node * node_isolated = createNode(node_name);
         addIsolatedNode(node_isolated);
         std::cout << "create an isolated node: " << node_name << std::endl;
@@ -237,26 +245,31 @@ void Graph::makeConnection(std::string name_parent, std::string name_child)
     std::cout << "[GRPAH_INFO] make connection " << name_parent << " -> " << name_child << std::endl; 
     Node * node_parent = root_->findChildByName(name_parent) ? root_->findChildByName(name_parent) : findIsolatedNode(name_parent);
     Node * node_child = root_->findChildByName(name_child) ? root_->findChildByName(name_child) : findIsolatedNode(name_child);
-
+    
     if( NULL == node_parent)//parent node do not exist in both graph and isolated list which will be an isolated node
     {
         node_parent = makeNode(name_parent);
-        addIsolatedNode(node_parent);
     }
-    else
-    {
-        removeIsolatedNode(node_parent);
-    }
-    
+    // else
+    // {
+    //     removeIsolatedNode(node_parent);
+    // }
+
     // Node * child_node = root->findChildByName(child_name);
     if( NULL == node_child)//If not exist then create one
     {
-        node_child = makeNode(name_child);
+        std::cout << "create child: " << name_child << std::endl;
+        node_child = createNode(name_child);
     }
-    node_parent->addChild(node_child);
-
+    else
+    {
+        std::cout << "find child: " << name_child << std::endl;
+    }
     
+    node_parent->addChild(node_child);
     removeIsolatedNode(node_child);
+
+    printIsolatedNodes();
 }
 
 void Graph::removeConnection(std::string name_parent, std::string name_child)
@@ -290,16 +303,20 @@ void Graph::removeNode(std::string node_name)
         
         (*it)->removeEdgeByName(node_name);
         addIsolatedNode(*it);
-        node_remove->removeChildByName((*it)->getNodeName());
+        // std::cout << "!!rm "<< (*it)->getNodeName() << std::endl;
+        //node_remove->removeChildByName((*it)->getNodeName());
     }
 
     //traverse parent node to delete their children
     std::vector<Edge *> edges_child = node_remove->getEdges();
     for(std::vector<Edge *>::iterator it = edges_child.begin(); it!= edges_child.end(); ++it )
     {
-        std::string name_parent = (*it)-> getFrom();
-   
-        root_->findChildByName(name_parent)->removeChildByName(node_name);
+        
+        
+            std::string name_parent = (*it)-> getFrom();
+            std::cout << "????!!! " <<  name_parent << std::endl;
+             root_->findChildByName(name_parent)->removeChildByName(node_name);
+        
     }
 
     if (findIsolatedNode(node_name))
