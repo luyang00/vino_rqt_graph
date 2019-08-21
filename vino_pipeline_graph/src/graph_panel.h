@@ -8,15 +8,16 @@
 namespace vino_pipeline_graph
 {
 
-class PipelinePaintWidget: public QFrame
+class PipelinePaintWidget: public QWidget
 {
 Q_OBJECT
 
 private:
     UIPipelineGraph * graph;
     QPoint pos_mouse_press;
+    bool mouse_press,mouse_release;
 
-
+    bool isAddingEdge;
 
 public:
   friend class MainPanel;
@@ -27,8 +28,9 @@ public:
   // We override QWidget::paintEvent() to do custom painting.
   virtual void paintEvent( QPaintEvent* event );
   virtual void mousePressEvent(QMouseEvent *event);
+  virtual void mouseReleaseEvent(QMouseEvent *event);
   virtual void mouseMoveEvent(QMouseEvent *event);
-  
+  virtual void AddEdge(void);
 
 //   // We override the mouse events and leaveEvent() to keep track of
 //   // what the mouse is doing.

@@ -133,7 +133,8 @@ void Node::printEdge()
 
 Node::~Node(){}
 
-Graph::Graph()
+Graph::Graph():
+    root_(NULL)
 {
 }
 
@@ -147,7 +148,7 @@ void Graph::makeRoot(std::string node_name)
     std::cout << "[GRAPH_INFO] make root :" << node_name << std::endl;
     if(root_ != NULL) 
     {
-        throw std::logic_error("root already exist!");
+       // throw std::logic_error("root already exist!");
     }
     root_ = createNode(node_name);
 }
@@ -250,21 +251,14 @@ void Graph::makeConnection(std::string name_parent, std::string name_child)
     {
         node_parent = makeNode(name_parent);
     }
-    // else
-    // {
-    //     removeIsolatedNode(node_parent);
-    // }
 
-    // Node * child_node = root->findChildByName(child_name);
     if( NULL == node_child)//If not exist then create one
     {
         std::cout << "create child: " << name_child << std::endl;
         node_child = createNode(name_child);
     }
-    else
-    {
-        std::cout << "find child: " << name_child << std::endl;
-    }
+    
+    
     
     node_parent->addChild(node_child);
     removeIsolatedNode(node_child);
@@ -275,12 +269,13 @@ void Graph::makeConnection(std::string name_parent, std::string name_child)
 void Graph::removeConnection(std::string name_parent, std::string name_child)
 {
     std::cout << "[GRPAH_INFO] remove connection: " << name_parent << " -> " << name_child <<  std::endl;
-    Node * node_parent = root_->findChildByName(name_parent);
-    Node * node_child = root_->findChildByName(name_child);
+    Node * node_parent = root_->findChildByName(name_parent) ?  root_->findChildByName(name_parent) : findIsolatedNode(name_parent) ;
+    Node * node_child =  node_parent->findChildByName(name_child);
 
-    if(node_child == NULL || node_parent == NULL){
+    if(node_parent == NULL || node_child == NULL){
         std::cout << "error,node doest not exist while removing connection." << std::endl;
     }
+
     node_child->removeEdgeByName(name_parent);    
     node_parent->removeChildByName(name_child);
 
@@ -314,8 +309,8 @@ void Graph::removeNode(std::string node_name)
         
         
             std::string name_parent = (*it)-> getFrom();
-            std::cout << "????!!! " <<  name_parent << std::endl;
-             root_->findChildByName(name_parent)->removeChildByName(node_name);
+            
+            root_->findChildByName(name_parent)->removeChildByName(node_name);
         
     }
 

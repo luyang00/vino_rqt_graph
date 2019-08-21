@@ -50,8 +50,8 @@ MainPanel::MainPanel( QWidget* parent )
   
   
   pipeline_widget = new PipelinePaintWidget;
-    
-
+  pipeline_widget->setMouseTracking(true);  
+  
    main_layout->addWidget( pipeline_widget);
 
    setLayout( main_layout );
@@ -84,7 +84,7 @@ MainPanel::MainPanel( QWidget* parent )
 void MainPanel::paintEvent( QPaintEvent* event )
 {
     QSize q = pipeline_widget->size();
-    std::cout << q.width() << "," << q.height() << std::endl;  
+   // std::cout << q.width() << "," << q.height() << std::endl;  
     // QPushButton *qb = new QPushButton("what??");
     // main_layout->addWidget( qb);
     // setLayout( main_layout );
@@ -128,11 +128,11 @@ void MainPanel::load( const rviz::Config& config )
   }
   void MainPanel::addEdgeBtnHandler(void)
   {
-
+      pipeline_widget->AddEdge();
   }
   void MainPanel::removeBtnHandler(void)
   {
-      pipeline_widget->graph->RemoveSelectedNode();
+      pipeline_widget->graph->RemoveSelectedElement();
       pipeline_widget->draw();
   }
 

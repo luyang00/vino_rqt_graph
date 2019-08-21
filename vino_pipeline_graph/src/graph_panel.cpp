@@ -17,7 +17,9 @@ namespace vino_pipeline_graph
 {
 
 PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
-  : QFrame( parent )
+  : QWidget( parent ),
+  mouse_release(true),
+  mouse_press(false)
 {
     // this->resize(400,566);
     QPalette   palette;
@@ -86,24 +88,64 @@ void PipelinePaintWidget::paintEvent( QPaintEvent* event )
         painter.drawText(5,5,"Resize to view it.");
     }
     graph->setCanvasSize(window_size.width(),window_size.height());
+
+
     graph->drawGraph();
+    
+    if(isAddingEdge)
+    {
+        
+        graph->drawLink();
+       
+    }
+
+
+
+}
+
+void PipelinePaintWidget::AddEdge(void)
+{
+    isAddingEdge = true;
+    std::cout << "ADD edge" << std::endl;
 }
 
 void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
 {
+    mouse_release = false;
+   
+    if(isAddingEdge)
+    {
+        graph->createEdgeBySelection();
+        isAddingEdge = false;
+        update();
+        return;
+    }
+
     if (event->button() == Qt::LeftButton){
-        //std::cout <<"Cick: " <<event->pos().x() << ","<<  event->pos().y() << std::endl;
+        std::cout <<"Cick: " <<event->pos().x() << ","<<  event->pos().y() << std::endl;
 
         pos_mouse_press  = event->pos();
 
         graph->selectdNode(event->pos());
 
-
-        graph->selectdEdge(event->pos());
+        graph->selectEdge(event->pos());
         update();
 		//setMouseState( Qt::MouseState::L_C, 0);
 	}
+
+    
+    
+    
 }
+
+void PipelinePaintWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    
+    mouse_release = true;
+   
+    
+}
+
 void PipelinePaintWidget::resizeEvent(QResizeEvent * event)
 {
     // QSize window_size = event->size();
@@ -115,10 +157,18 @@ void PipelinePaintWidget::resizeEvent(QResizeEvent * event)
 }
 void PipelinePaintWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    //std::cout <<"Move: " <<event->pos().x() << ","<<  event->pos().y() << std::endl;
-    graph->drawMovedNode(event->pos() , pos_mouse_press);
-    pos_mouse_press = event->pos();
-    update();
+    if(mouse_release!= true)
+    {
+        graph->drawMovedNode(event->pos() , pos_mouse_press);
+        pos_mouse_press = event->pos();
+        update();
+    }
+
+    if(isAddingEdge)
+    {
+        graph->setNodeLinkTo(event->pos());
+        update();
+    }
 }
 
 } // end namespace rviz_plugin_tutorials
