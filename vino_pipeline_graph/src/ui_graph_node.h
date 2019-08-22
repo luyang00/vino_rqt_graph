@@ -72,11 +72,12 @@ namespace vino_pipeline_graph{
     {
     private:
         //UIPipelineNode * root_;
+        std::string pipeline_name;
         QPaintDevice * canvas_;
         int canvas_width_, canvas_height_;
         float boarder_width_, boarder_height_;
         float rect_width_,rect_height_;
-        bool initialized;
+       
         QPoint node_link_target;
         UIPipelineNode * selected_node;
         UIPipelineEdge * selected_edge;
@@ -88,10 +89,10 @@ namespace vino_pipeline_graph{
             canvas_width_(canvas_width),
             canvas_height_(canvas_height),
             boarder_width_(0.04),
-            boarder_height_(0.04),
+            boarder_height_(0.02),
             rect_width_(0.16),
             rect_height_(0.04),
-            initialized(false),
+            
           
             selected_edge(NULL),
             selected_node(NULL)
@@ -102,13 +103,12 @@ namespace vino_pipeline_graph{
       
         Node* createNode(std::string node_name){  return new UIPipelineNode(node_name);}
 
-        void drawGraph()
+        void drawGraph(bool resize = false)
         {
-            if(initialized == false)
+            if(resize == true)
             {
                 initialTraverseDrawNode((UIPipelineNode *)root_);
-                
-                initialized = true;
+            
             }
             else
             {
@@ -199,7 +199,7 @@ namespace vino_pipeline_graph{
         {
             if(node == root_){
                 node->rect.setRect(0 + boarder_width_ * canvas_width_,
-                              0 + boarder_height_ * canvas_height_,
+                              (rect_height_ + boarder_height_) * canvas_height_ + boarder_height_ * canvas_height_,
                               rect_width_ * canvas_width_,
                               rect_height_ * canvas_height_);
             }
@@ -208,7 +208,7 @@ namespace vino_pipeline_graph{
             
             if (node->getChilds().size() == 0 ) return;
 
-            int row = 0;
+            int row = 1;
             for(int i=0;i< node->getChilds().size(); i++)
             {
 
@@ -260,7 +260,7 @@ namespace vino_pipeline_graph{
             painter.drawLine(line);
 
         }
-        void createEdgeBySelection()
+        bool createEdgeBySelection()
         {
             
             UIPipelineNode * source_node = selected_node;
@@ -271,8 +271,9 @@ namespace vino_pipeline_graph{
             if(source_node !=NULL && target_node!=NULL && target_node!=root_)
             {
                 std::cout << "make connection" <<  source_node->getNodeName() << " - " <<target_node->getNodeName();
-                makeConnection( source_node->getNodeName(),target_node->getNodeName());
+                return makeConnection( source_node->getNodeName(),target_node->getNodeName());
             }
+            return false;
         }
          void traverseDrawNode(UIPipelineNode * node)
         {
@@ -412,12 +413,9 @@ namespace vino_pipeline_graph{
            
 
             selected_node = selectNodeByPos((UIPipelineNode *)root_, mouse_pos) ;
-            if (selected_node  == NULL){
-                return;
-            }           
-            std::cout << "select node: " << selected_node->getNodeName() << std::endl;
-
-            
+            if (selected_node){
+                std::cout << "select node: " << selected_node->getNodeName() << std::endl;
+            }
         }
 
         void selectEdge(QPoint mouse_pos)
@@ -445,21 +443,33 @@ namespace vino_pipeline_graph{
             {
                 std::cout << "select an edge: "<< selected_edge->getFrom() << " --> " << selected_edge->getTo() << std::endl;
                 selected_edge->color.setRgb(0,255,0,255);
-            }   
+            }
+            
             
         }
-        void AddNewNode(std::string node_name)
-        {
+        void addNewNode(std::string node_name)
+        {   
+            if(selected_node)
+            {   
+                selected_node->color.setRgb(255,255,255,255);
+            }
+            if(selected_edge)
+                selected_edge->color.setRgb(0,0,0,255);
+            
             if(root_->findChildByName(node_name) || findIsolatedNode(node_name))
             {
                 
-                 QMessageBox message(QMessageBox::NoIcon, "Failed", "Create faield, node duplicated!"); 
+                QMessageBox message(QMessageBox::NoIcon, "Failed", "Create faield, node duplicated!"); 
                 message.exec();
 
                 return;
             }
-            makeNode(node_name);
-            
+            UIPipelineNode * new_node =   (UIPipelineNode *)makeNode(node_name);
+            new_node->rect.setWidth(((UIPipelineNode *)root_)->rect.width());
+            new_node->rect.setHeight(((UIPipelineNode *)root_)->rect.height());
+            new_node->color.setRgb(125, 125, 125, 255);
+
+            selected_node = new_node;
         }
 
         void RemoveSelectedElement()

@@ -36,9 +36,9 @@ PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
     FLAGS_config = prefix_path + "/param/pipeline.yaml";
     std::cout  << "FLAGS_config=" << FLAGS_config << std::endl;
 
-    graph = new UIPipelineGraph(this, 640,480);
+    // graph = new UIPipelineGraph(this, 640,480);
 
-    graph->parsePipeline(FLAGS_config);
+    // graph->parsePipeline(FLAGS_config);
 
     // graph->makeRoot("StandardCamera");
     // graph->makeConnection("StandardCamera","ObjectDetection");
@@ -79,9 +79,26 @@ PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
 // arc-arrows representing wheel motion.  It is not particularly
 // relevant to learning how to make an RViz plugin, so I will kind of
 // skim it.
+void PipelinePaintWidget::loadPipeline(std::string file_path)
+{
+    delete graph;
+    graph = NULL;
+    graph= new UIPipelineGraph(this, 640,480);
+    graph->parsePipeline(file_path);
+    isResize = true;
+    update();
+
+}
+void PipelinePaintWidget::savePipeline()
+{    
+}
 void PipelinePaintWidget::paintEvent( QPaintEvent* event )
 {
-    QSize window_size = this->size();
+    if(!graph) return;
+
+    QSize window_size = this->size(); 
+     std::cout << "!!!!!!!!" << "paint event" <<  
+    window_size.width() << " , " <<window_size.height()<< std::endl;
     if(window_size.width()<50 || window_size.height()<200){
         QPainter painter(this);
         painter.setPen(Qt::blue);
@@ -89,9 +106,18 @@ void PipelinePaintWidget::paintEvent( QPaintEvent* event )
     }
     graph->setCanvasSize(window_size.width(),window_size.height());
 
-
-    graph->drawGraph();
+    if(isResize) 
+    {
+         graph->drawGraph(true);
+         isResize = false;
+         update();
+    }
+    else
+    {
+        graph->drawGraph(false);
+    }
     
+
     if(isAddingEdge)
     {
         
@@ -103,14 +129,22 @@ void PipelinePaintWidget::paintEvent( QPaintEvent* event )
 
 }
 
-void PipelinePaintWidget::AddEdge(void)
+void PipelinePaintWidget::addEdge(void)
 {
+    if(!graph) return;
     isAddingEdge = true;
     std::cout << "ADD edge" << std::endl;
+}
+void PipelinePaintWidget::addNode(std::string name)
+{
+    if(!graph) return;
+    graph->addNewNode(name);
 }
 
 void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
 {
+    if(!graph) return;
+
     mouse_release = false;
    
     if(isAddingEdge)
@@ -132,15 +166,12 @@ void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
         update();
 		//setMouseState( Qt::MouseState::L_C, 0);
 	}
-
-    
-    
-    
 }
+
 
 void PipelinePaintWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    
+    if(!graph) return;
     mouse_release = true;
    
     
@@ -148,6 +179,9 @@ void PipelinePaintWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void PipelinePaintWidget::resizeEvent(QResizeEvent * event)
 {
+    if(!graph) return;
+    isResize = true;
+    
     // QSize window_size = event->size();
     // if(window_size.width()<50 || window_size.height()<200){
     //     QPainter painter(this);
@@ -157,6 +191,7 @@ void PipelinePaintWidget::resizeEvent(QResizeEvent * event)
 }
 void PipelinePaintWidget::mouseMoveEvent(QMouseEvent *event)
 {
+    if(!graph) return;
     if(mouse_release!= true)
     {
         graph->drawMovedNode(event->pos() , pos_mouse_press);

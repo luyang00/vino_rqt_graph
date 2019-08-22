@@ -17,27 +17,40 @@ Node::Node(std::string node_name) : node_name_(node_name)
 {
 }
 
-void Node::addChild(std::string child_name)
+bool Node::addChild(std::string child_name)
 {
     Node * child_node = findChildByName(child_name);
-    if( NULL != child_node){ ;}//If the child exist in the graph 
+    if( NULL != child_node){
+        if(child_node->findChildByName(this->getNodeName())!=NULL)
+        {
+            std::cout << "loop detected! create link failed!" << std::endl;
+            return false;
+        }
+    }//If the child exist in the graph 
     else // If not exist then create one
     {
         child_node = new Node( child_name);
     }
     child_node->in_edges_.push_back(createEdge(this->node_name_,child_node->node_name_));
     child_nodes_.push_back( child_node);
+    return true;
 }
 
-void Node::addChild(Node * child_node)
+bool Node::addChild(Node * child_node)
 {
     if(child_node == NULL) 
     {
         std::cout << "Node is null pointer!" << std::endl;
-        return;
+        return false;
+    }
+    if(child_node->findChildByName(this->getNodeName())!=NULL)
+    {
+        std::cout << "loop detected! create link failed!" << std::endl;
+        return false;
     }
     child_node->in_edges_.push_back(createEdge(this->node_name_,child_node->node_name_));
     child_nodes_.push_back(child_node);
+    return true;
 }
 
 
@@ -241,7 +254,8 @@ bool Graph::validConnection(void)
     bool ret = isolated_node_list_.size() > 0 ? false : true;
     return ret;
 }
-void Graph::makeConnection(std::string name_parent, std::string name_child)
+
+bool Graph::makeConnection(std::string name_parent, std::string name_child)
 {
     std::cout << "[GRPAH_INFO] make connection " << name_parent << " -> " << name_child << std::endl; 
     Node * node_parent = root_->findChildByName(name_parent) ? root_->findChildByName(name_parent) : findIsolatedNode(name_parent);
@@ -258,12 +272,20 @@ void Graph::makeConnection(std::string name_parent, std::string name_child)
         node_child = createNode(name_child);
     }
     
-    
-    
-    node_parent->addChild(node_child);
-    removeIsolatedNode(node_child);
 
-    printIsolatedNodes();
+    
+    bool ret = node_parent->addChild(node_child);
+    if(ret)
+    {
+        removeIsolatedNode(node_child);
+
+        printIsolatedNodes();
+    }
+    else
+    {
+        return false;
+    }
+    
 }
 
 void Graph::removeConnection(std::string name_parent, std::string name_child)

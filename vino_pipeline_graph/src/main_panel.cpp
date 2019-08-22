@@ -23,6 +23,16 @@ MainPanel::MainPanel( QWidget* parent )
   // QLabel and a QLineEdit in a QHBoxLayout.
   
   controller_layout = new QHBoxLayout;
+  
+   
+  btn_load_pipeline = new QPushButton("Load");
+  btn_save_pipeline = new QPushButton("Save");
+  connect(btn_load_pipeline, SIGNAL (released()), this, SLOT (loadPipelineBtnHandler()));
+  connect(btn_save_pipeline, SIGNAL (released()), this, SLOT (savePipelineBtnHandler()));
+
+  controller_layout ->addWidget( btn_load_pipeline);
+  controller_layout ->addWidget(btn_save_pipeline );
+
   controller_layout->addWidget( new QLabel( "pipeline:" ));
   controller_layout->addWidget( new  QComboBox());
   controller_layout->addWidget( new QPushButton("Start"));
@@ -32,6 +42,7 @@ MainPanel::MainPanel( QWidget* parent )
 
   
   editor_layout = new QHBoxLayout;
+ 
 
   btn_addNode = new QPushButton("Add Node");
   btn_addEdge = new QPushButton("Add Edge");
@@ -42,17 +53,32 @@ MainPanel::MainPanel( QWidget* parent )
 
 
 
+
   editor_layout ->addWidget(btn_addNode);
   editor_layout ->addWidget(btn_addEdge);
   editor_layout ->addWidget(btn_remove);
+
   main_layout->addLayout( editor_layout );
 
   
-  
+
+
+
   pipeline_widget = new PipelinePaintWidget;
   pipeline_widget->setMouseTracking(true);  
+
+    
+  // QScrollArea *pScroll = new QScrollArea(this);
   
-   main_layout->addWidget( pipeline_widget);
+  // pScroll->setWidget(  pipeline_widget);
+  // pScroll->setWidgetResizable(true);
+  // pScroll->setGeometry(0,0,200,200);//要显示的区域大小
+  // //PipelinePaintWidget->setWidgetResizable(true);
+  // //pipeline_widget->setGeometry(0,0,640,480);//这里变大后，看出他实际滚动的是里面的QWidget窗口
+
+
+  
+   main_layout->addWidget(  pipeline_widget);
 
    setLayout( main_layout );
 
@@ -84,6 +110,7 @@ MainPanel::MainPanel( QWidget* parent )
 void MainPanel::paintEvent( QPaintEvent* event )
 {
     QSize q = pipeline_widget->size();
+    
    // std::cout << q.width() << "," << q.height() << std::endl;  
     // QPushButton *qb = new QPushButton("what??");
     // main_layout->addWidget( qb);
@@ -110,6 +137,31 @@ void MainPanel::load( const rviz::Config& config )
   }
 }
 
+void MainPanel::loadPipelineBtnHandler(void)
+{
+  std::string file_name = QFileDialog::getOpenFileName(NULL,"Load pipeline file(*.yaml)",".","*.yaml").toStdString();
+//  std::cout << file_name.toStdString() << std::endl;
+  pipeline_widget->loadPipeline(file_name);
+    // QFileDialog *fileDialog = new QFileDialog(this);
+    // fileDialog->setWindowTitle(tr("Open pipeline file(*.yaml)"));
+    // fileDialog->setDirectory(".");
+    //  fileDialog->setNameFilter(tr("Pipeline(*.yaml)"));
+    //  fileDialog->setFileMode(QFileDialog::ExistingFiles);
+    //  fileDialog->setViewMode(QFileDialog::Detail);
+     
+    //  QStringList fileNames;
+    //  if(fileDialog->exec())
+    //  {
+    //    fileNames = fileDialog->selectedFiles();
+    //    std::cout << fileNames[0]<< std::end;
+    //  }
+}
+
+void MainPanel::savePipelineBtnHandler(void)
+{
+    pipeline_widget->savePipeline();
+}
+
 
   void MainPanel::addNodeBtnHandler(void)
   {
@@ -121,14 +173,14 @@ void MainPanel::load( const rviz::Config& config )
       {
           std::string node_name = new_node_dialog.textValue().toStdString();
  
-          pipeline_widget->graph->AddNewNode(node_name);
+          pipeline_widget->addNode(node_name);
       }
       pipeline_widget->draw();
      
   }
   void MainPanel::addEdgeBtnHandler(void)
   {
-      pipeline_widget->AddEdge();
+      pipeline_widget->addEdge();
   }
   void MainPanel::removeBtnHandler(void)
   {

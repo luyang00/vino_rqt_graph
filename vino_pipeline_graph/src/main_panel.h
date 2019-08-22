@@ -17,6 +17,7 @@
 #include <QPalette>
 #include <QBrush>
 #include <QSize>
+#include <QFileDialog>
 #include <QInputDialog>
 #include "graph_panel.h"
 
@@ -68,6 +69,8 @@ private Q_SLOTS:
   void addNodeBtnHandler(void);
   void addEdgeBtnHandler(void);
   void removeBtnHandler(void);
+  void loadPipelineBtnHandler(void);
+  void savePipelineBtnHandler(void);
 
 protected:
     QVBoxLayout* main_layout;
@@ -79,6 +82,8 @@ private:
   QPushButton * btn_addNode;
   QPushButton * btn_addEdge;
   QPushButton * btn_remove;
+  QPushButton * btn_load_pipeline;
+  QPushButton * btn_save_pipeline;
 
 //   QLineEdit* output_topic_editor_;
 

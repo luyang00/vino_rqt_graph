@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 namespace vino_pipeline_graph{
+
     class Edge{
     private:
         std::string from_;
@@ -36,8 +37,8 @@ namespace vino_pipeline_graph{
         int getNumOfChildNodes(void){return child_nodes_.size();}
         int getNumOfEdges(void){return in_edges_.size();}
         std::string getNodeName(void) {return node_name_;} 
-        void addChild(std::string child_name);
-        void addChild(Node * child_node);
+        bool addChild(std::string child_name);
+        bool addChild(Node * child_node);
         std::vector<Node *> getChilds(void){return child_nodes_;}
         std::vector<Edge *> getEdges(void) {return in_edges_;}
         void removeChildByName(std::string find_name);
@@ -68,7 +69,7 @@ namespace vino_pipeline_graph{
         Graph();
         void makeRoot(std::string node_name);
         Node * makeNode(std::string node_name);
-        void makeConnection(std::string name_parent, std::string name_child);
+        bool makeConnection(std::string name_parent, std::string name_child);
         void removeConnection(std::string name_parent, std::string name_child);
         void removeNode(std::string name_name);
         void printAllNodes();
