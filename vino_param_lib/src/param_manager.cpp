@@ -223,4 +223,153 @@ ParamManager::PipelineParams ParamManager::getPipeline(
   }
   throw std::logic_error("No parameters found for pipeline [" + name + "]");
 }
+
+
+
+/***
+ * 
+ *  export params to yaml file
+ * 
+ */
+
+/*
+void operator>>(const YAML::Node& node, ParamManager::PipelineParams& pipeline);
+void operator>>(const YAML::Node& node,
+                std::vector<ParamManager::InferenceParams>& list);
+void operator>>(const YAML::Node& node, ParamManager::InferenceParams& infer);
+void operator>>(const YAML::Node& node, std::vector<std::string>& list);
+void operator>>(const YAML::Node& node,
+                std::multimap<std::string, std::string>& connect);
+void operator>>(const YAML::Node& node, std::string& str);
+void operator>>(const YAML::Node& node, bool& val);
+void operator>>(const YAML::Node& node, ParamManager::CommonParams& common);
+*/
+
+void operator<<(YAML::Emitter& out,
+                const std::multimap<std::string, std::string>);
+void operator<<(YAML::Emitter& out,
+                const ParamManager::PipelineParams& pipeline);
+void operator<<(YAML::Emitter& out,
+                const ParamManager::InferenceParams& infer);
+void operator<<(YAML::Emitter& out, ParamManager::CommonParams& common);
+
+
+void operator<<(YAML::Emitter& out,
+                const std::multimap<std::string, std::string> connects)
+{
+
+
+  
+
+  //       out << YAML::Key << "left" << YAML::Value << it->first;
+  //       out << YAML::Key << "right" << YAML::Value << it->second;
+  //       out << YAML::EndMap;
+
+
+  std::set<std::string> node_names;
+  for (auto it = connects.begin(); it != connects.end(); ++it) 
+  {
+      node_names.insert(it->first);
+  }
+  for (auto left = node_names.begin(); left != node_names.end(); ++left) 
+  {
+    out << YAML::BeginMap;
+    out << YAML::Key << "left" << YAML::Value << *left;
+
+    out << YAML::Key << "right" << YAML::Value << YAML::Flow;
+    out<< YAML::BeginSeq;
+    for (auto it = connects.begin(); it != connects.end(); ++it)
+    {
+        if(*left == it->first) 
+        {
+          out << it->second;
+        }   
+    }
+    out << YAML::EndSeq;
+    out << YAML::EndMap;
+  }
+
+
+}
+            
+void operator<<(YAML::Emitter& out,
+                const ParamManager::InferenceParams& infer)
+{
+  out << YAML::BeginMap;
+  out << YAML::Key << "name"   << YAML::Value << infer.name;
+  out << YAML::Key << "model"  << YAML::Value << infer.model;
+  out << YAML::Key << "engine" << YAML::Value << infer.engine;
+  out << YAML::Key << "label"  << YAML::Value << infer.label;
+
+  out << YAML::EndMap;
+}
+
+
+void operator<<(YAML::Emitter& out,
+                const ParamManager::PipelineParams& pipeline)
+{
+
+  out << YAML::BeginMap;
+  out << YAML::Key << "name" << YAML::Value << pipeline.name;
+
+
+  //Export inputs
+  out << YAML::Key << "inputs" << YAML::Flow;
+  out<< YAML::BeginSeq;
+  for(auto input= pipeline.inputs.begin(); input != pipeline.inputs.end();++input)
+  {
+    out<< *input;
+  }
+  out << YAML::EndSeq;
+
+  //Export infers
+  out << YAML::Key << "infers" <<  YAML::Value << YAML::BeginSeq;
+  for (auto infer = pipeline.infers.begin(); infer != pipeline.infers.end(); ++infer) 
+  {     
+    out << *infer; 
+  }
+  out << YAML::EndSeq;
+
+  //Export outputs
+  out << YAML::Key << "outputs" << YAML::Flow;
+  out<< YAML::BeginSeq;
+  for(auto output= pipeline.outputs.begin(); output != pipeline.outputs.end();++output)
+  {
+    out<< *output;
+  }
+  out << YAML::EndSeq;
+
+  
+  out << YAML::Key << "confidence_threshold" << YAML::Value << "0.2";///To-do not implement in code 
+
+  //Export connects
+  out << YAML::Key << "connects" << YAML::Value << YAML::BeginSeq;
+  out << pipeline.connects;
+  out << YAML::EndSeq;
+
+
+  out << YAML::EndMap;
+}
+void operator<<(YAML::Emitter& out, ParamManager::CommonParams& common)
+{
+  //to-do
+  std::cout << "Export commont not implemented yet." << std::endl;
+}
+void ParamManager::save( const ParamManager::PipelineParams& pipeline,
+                         const std::string& path)
+{
+  std::vector<PipelineParams> pipelines;
+  pipelines.push_back(pipeline);
+
+  std::ofstream fout(path);
+  YAML::Emitter out(fout);
+  fout << "Pipelines:" << std::endl;
+
+  out << pipelines;
+  // fout << std::endl << "Common:" << std::endl;
+  // out << common_;
+
+}
+
+
 }  // namespace Params

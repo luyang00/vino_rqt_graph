@@ -3,7 +3,8 @@
 
 #include <QPainter>
 #include <QMouseEvent>
-
+#include <QObject>
+#include <QGridLayout>
 #include "graph_panel.h"
 #include "base_graph_node.h"
 #include "ui_graph_node.h"
@@ -32,48 +33,14 @@ PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
     std::string FLAGS_config;
     std::string prefix_path;
 
-    prefix_path = ros::package::getPath("vino_param_lib");
-    FLAGS_config = prefix_path + "/param/pipeline.yaml";
-    std::cout  << "FLAGS_config=" << FLAGS_config << std::endl;
-
-    // graph = new UIPipelineGraph(this, 640,480);
-
-    // graph->parsePipeline(FLAGS_config);
-
-    // graph->makeRoot("StandardCamera");
-    // graph->makeConnection("StandardCamera","ObjectDetection");
-    // graph->makeConnection("ObjectDetection","ImageWindow");
-    // graph->makeConnection("ObjectDetection","Rviz");
-    // graph->makeConnection("ObjectDetection","Rostopic");
-    // graph->makeConnection("ObjectDetection","FaceDetection");
-    // graph->makeConnection("FaceDetection","Face Re-ID");
-    // graph->makeConnection("Face Re-ID","ImageWindow");
-    // graph->makeConnection("FaceDetection","ImageWindow");
-    // graph->makeConnection("FaceDetection","Tracking");
-    // graph->makeConnection("Tracking","Rviz");
-    // graph->makeConnection("FaceDetection","111");
-    // graph->makeConnection("ObjectDetection","???");
-    // graph.printAllNodes();
-    // graph.printAllEdges();
-    // graph.printIsolatedNodes();
-    
-    // std::cout << "Max depth: " << graph.getMaxDepth() << std::endl;
-    // std::cout << "Max width: " << graph.getMaxWidth() << std::endl;
-    
-    // graph.removeConnection("ObjectDetection","FaceDetection");
-    // graph.removeNode("FaceDetection");
-    // graph.printAllEdges();
-    // graph.printAllEdges();
-    // graph.printIsolatedNodes();
-
-
-
-    
+    // prefix_path = ros::package::getPath("vino_param_lib");
+    // FLAGS_config = prefix_path + "/param/pipeline.yaml";
+    // std::cout  << "FLAGS_config=" << FLAGS_config << std::endl;
 
 
    
-    
 }
+
 
 // This paintEvent() is complex because of the drawing of the two
 // arc-arrows representing wheel motion.  It is not particularly
@@ -89,16 +56,25 @@ void PipelinePaintWidget::loadPipeline(std::string file_path)
     update();
 
 }
-void PipelinePaintWidget::savePipeline()
-{    
+void PipelinePaintWidget::savePipeline(std::string file_path)
+{
+   graph->exportPipeline(file_path);
+
+    
+  
+
+   
+    
+  
+    
 }
 void PipelinePaintWidget::paintEvent( QPaintEvent* event )
 {
     if(!graph) return;
 
     QSize window_size = this->size(); 
-     std::cout << "!!!!!!!!" << "paint event" <<  
-    window_size.width() << " , " <<window_size.height()<< std::endl;
+    //  std::cout << "!!!!!!!!" << "paint event" <<  
+    // window_size.width() << " , " <<window_size.height()<< std::endl;
     if(window_size.width()<50 || window_size.height()<200){
         QPainter painter(this);
         painter.setPen(Qt::blue);
@@ -133,7 +109,7 @@ void PipelinePaintWidget::addEdge(void)
 {
     if(!graph) return;
     isAddingEdge = true;
-    std::cout << "ADD edge" << std::endl;
+ 
 }
 void PipelinePaintWidget::addNode(std::string name)
 {
@@ -156,23 +132,39 @@ void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
     }
 
     if (event->button() == Qt::LeftButton){
-        std::cout <<"Cick: " <<event->pos().x() << ","<<  event->pos().y() << std::endl;
+        
 
         pos_mouse_press  = event->pos();
 
-        graph->selectdNode(event->pos());
-
-        graph->selectEdge(event->pos());
+        bool is_select_node = graph->selectdNode(event->pos());
+        bool is_select_edge = graph->selectEdge(event->pos());
+        
+        
+        if(is_select_node) 
+        {
+            auto params = graph->getSelectedNodeParams();
+           
+            Q_EMIT __graph_select_node(params);
+        }
+        if(is_select_edge) Q_EMIT __graph_select_edge();
         update();
 		//setMouseState( Qt::MouseState::L_C, 0);
 	}
+}
+
+void PipelinePaintWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    //double click do nothing
+    update();
 }
 
 
 void PipelinePaintWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     if(!graph) return;
+
     mouse_release = true;
+   
    
     
 }

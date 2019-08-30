@@ -388,7 +388,7 @@ namespace vino_pipeline_graph{
     
            
         }
-        void selectdNode(QPoint mouse_pos)
+        bool selectdNode(QPoint mouse_pos)
         {
             std::cout << "There are " << getNumIsolatedNode() << " isolated node." << std::endl;
 
@@ -406,7 +406,7 @@ namespace vino_pipeline_graph{
                     selected_node = isolated_node;
                     //set focus color
                     selected_node->color.setRgb(124,125,125,255);
-                    return;
+                    return true;
                 }   
             }
 
@@ -415,10 +415,18 @@ namespace vino_pipeline_graph{
             selected_node = selectNodeByPos((UIPipelineNode *)root_, mouse_pos) ;
             if (selected_node){
                 std::cout << "select node: " << selected_node->getNodeName() << std::endl;
+                std::cout << "select node params: " << selected_node->getNodeParams().model << std::endl;
+                return true;
             }
+            return false;
         }
-
-        void selectEdge(QPoint mouse_pos)
+        Node::NodeParams getSelectedNodeParams()
+        {
+            if(selected_node== NULL)   throw std::logic_error("No node selected but try to get params");    
+            else return selected_node->getNodeParams();
+        }
+        
+        bool selectEdge(QPoint mouse_pos)
         {
             if(selected_edge)
             {   
@@ -433,7 +441,7 @@ namespace vino_pipeline_graph{
                     selected_edge= isolated_edge;
                     //set focus color
                     selected_edge->color.setRgb(0,255,0,255);
-                    return;
+                    return true;
                 }   
             }
 
@@ -443,7 +451,10 @@ namespace vino_pipeline_graph{
             {
                 std::cout << "select an edge: "<< selected_edge->getFrom() << " --> " << selected_edge->getTo() << std::endl;
                 selected_edge->color.setRgb(0,255,0,255);
+                return true;
             }
+
+            return false;
             
             
         }

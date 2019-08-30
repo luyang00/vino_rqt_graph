@@ -29,13 +29,15 @@ public:
 
   // We override QWidget::paintEvent() to do custom painting.
   virtual void loadPipeline(std::string file_path);
-  virtual void savePipeline();
+  virtual void savePipeline(std::string file_path);
   virtual void paintEvent( QPaintEvent* event );
   virtual void mousePressEvent(QMouseEvent *event);
   virtual void mouseReleaseEvent(QMouseEvent *event);
   virtual void mouseMoveEvent(QMouseEvent *event);
+  virtual void mouseDoubleClickEvent(QMouseEvent *event);
   virtual void addEdge(void);
   virtual void addNode(std::string name);
+  
 
 //   // We override the mouse events and leaveEvent() to keep track of
 //   // what the mouse is doing.
@@ -54,7 +56,8 @@ public:
 
 
 Q_SIGNALS:
-  
+  void __graph_select_node(vino_pipeline_graph::Node::NodeParams);
+  void __graph_select_edge();
 protected:
 
 };

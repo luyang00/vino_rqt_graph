@@ -1,6 +1,6 @@
 Pipelines:
 - name: people
-  inputs: [StandardCamera ]
+  inputs: [StandardCamera]
   infers:
     - name: face_detection
       model: /opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-adas-0001/FP32/face-detection-adas-0001.xml

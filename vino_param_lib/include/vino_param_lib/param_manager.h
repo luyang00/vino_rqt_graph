@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 
+
 namespace Params
 {
 /**
@@ -51,9 +52,7 @@ class ParamManager  // singleton
    */
   static ParamManager& getInstance()
   {
-    std::cout << "getting instance" << std::endl;
     static ParamManager manager_;
-    std::cout << "return instance" << std::endl;
     return manager_;
   }
 
@@ -69,6 +68,16 @@ class ParamManager  // singleton
     std::string engine;
     std::string model;
     std::string label;
+    bool operator==( const std::string& name ) const
+    {
+        return this->name == name;
+    }
+    InferenceParams(  std::string name,
+                      std::string engine,
+                      std::string model,
+                      std::string label):
+                      name(name),engine(engine),model(model),label(label){};
+    InferenceParams(){}
   };
   struct PipelineParams
   {
@@ -93,6 +102,8 @@ class ParamManager  // singleton
    * @return None.
    */
   void parse(std::string path);
+  void save(const ParamManager::PipelineParams& pipeline,
+                    const std::string& path);
 
   /**
    * @brief Retrieve pipeline names.
@@ -125,6 +136,8 @@ class ParamManager  // singleton
   {
     return common_;
   }
+
+ 
 
  private:
   ParamManager()

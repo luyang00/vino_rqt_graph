@@ -76,9 +76,62 @@ MainPanel::MainPanel( QWidget* parent )
   // //PipelinePaintWidget->setWidgetResizable(true);
   // //pipeline_widget->setGeometry(0,0,640,480);//这里变大后，看出他实际滚动的是里面的QWidget窗口
 
-
+  controller_layout = new QHBoxLayout;
   
-   main_layout->addWidget(  pipeline_widget);
+
+  QGridLayout *pLayout = new QGridLayout();
+  pLayout->addWidget(pipeline_widget, 0, 0, 0, 4);
+  attribute_layout = new QVBoxLayout;
+
+  //attribute param name
+  QHBoxLayout* attri_name_layout = new QHBoxLayout;
+  attri_name_layout ->addWidget(new QLabel("Name :"));
+  edit_name = new QLineEdit();
+  edit_name->setReadOnly(true);
+  attri_name_layout->addWidget(edit_name);
+  attribute_layout->addLayout(attri_name_layout);
+
+  //attribute param node_type
+  QHBoxLayout* attri_type_layout = new QHBoxLayout;
+  attri_type_layout ->addWidget(new QLabel("Type  :"));
+  edit_node_type = new QLineEdit();
+  attri_type_layout->addWidget(edit_node_type);
+  attribute_layout->addLayout(attri_type_layout);
+
+  //attribute parm model 
+  QHBoxLayout* attri_model_layout = new QHBoxLayout;
+  attri_model_layout ->addWidget(new QLabel("Model :"));
+  edit_model = new QLineEdit();
+  attri_model_layout->addWidget(edit_model);
+  attribute_layout->addLayout(attri_model_layout);
+
+  //attribute param engine
+  QHBoxLayout* attri_engine_layout = new QHBoxLayout;
+  attri_engine_layout ->addWidget(new QLabel("Engine:"));
+  edit_engine = new QLineEdit();
+  attri_engine_layout->addWidget(edit_engine);
+  attribute_layout->addLayout(attri_engine_layout);
+
+   //attribute param engine
+  QHBoxLayout* attri_label_layout = new QHBoxLayout;
+  attri_label_layout ->addWidget(new QLabel("Label  :"));
+  edit_label = new QLineEdit();
+  attri_label_layout->addWidget(edit_label);
+  attribute_layout->addLayout(attri_label_layout);
+  
+  QHBoxLayout* attr_action_layout = new QHBoxLayout;
+  btn_clear = new QPushButton("Clear");
+  btn_apply = new QPushButton("Apply");
+  attr_action_layout->addWidget(btn_clear);
+  attr_action_layout->addWidget(btn_apply);
+  attribute_layout->addLayout( attr_action_layout);
+
+  pLayout->addLayout(attribute_layout,0,4,Qt::AlignTop);
+
+  main_layout->addLayout( pLayout );
+
+
+   //main_layout->addWidget(  pipeline_widget);
 
    setLayout( main_layout );
 
@@ -101,12 +154,26 @@ MainPanel::MainPanel( QWidget* parent )
 //   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
 //   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
 
+  connect(pipeline_widget, SIGNAL (__graph_select_node(vino_pipeline_graph::Node::NodeParams)), this, SLOT (updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams)));
+  //connect(pipeline_widget, SIGNAL (__graph_select_edge()), this, SLOT (updateAttributeDisplay()));
   // Start the timer.
   output_timer->start( 100 );
 
 
 }
 
+void MainPanel::updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params)
+{
+  
+ 
+  std::cout << "emit params: " << params.name << ", " << params.type << ", " << params.engine << std::endl;
+  edit_name->setText(QString::fromStdString(params.name));
+  edit_model->setText(QString::fromStdString(params.model));
+  edit_engine->setText(QString::fromStdString(params.engine));
+  edit_label->setText(QString::fromStdString(params.label));
+  
+
+}
 void MainPanel::paintEvent( QPaintEvent* event )
 {
     QSize q = pipeline_widget->size();
@@ -140,31 +207,22 @@ void MainPanel::load( const rviz::Config& config )
 void MainPanel::loadPipelineBtnHandler(void)
 {
   std::string file_name = QFileDialog::getOpenFileName(NULL,"Load pipeline file(*.yaml)",".","*.yaml").toStdString();
-//  std::cout << file_name.toStdString() << std::endl;
+
   pipeline_widget->loadPipeline(file_name);
-    // QFileDialog *fileDialog = new QFileDialog(this);
-    // fileDialog->setWindowTitle(tr("Open pipeline file(*.yaml)"));
-    // fileDialog->setDirectory(".");
-    //  fileDialog->setNameFilter(tr("Pipeline(*.yaml)"));
-    //  fileDialog->setFileMode(QFileDialog::ExistingFiles);
-    //  fileDialog->setViewMode(QFileDialog::Detail);
-     
-    //  QStringList fileNames;
-    //  if(fileDialog->exec())
-    //  {
-    //    fileNames = fileDialog->selectedFiles();
-    //    std::cout << fileNames[0]<< std::end;
-    //  }
+
 }
 
 void MainPanel::savePipelineBtnHandler(void)
 {
-    pipeline_widget->savePipeline();
+    std::string file_name = "/home/intel/Code/test.yaml";
+    pipeline_widget->savePipeline(file_name);
 }
 
 
   void MainPanel::addNodeBtnHandler(void)
   {
+    if(!pipeline_widget->graph) return;
+
       QInputDialog new_node_dialog(this); 
       new_node_dialog.setWindowTitle("Add a new node"); 
       new_node_dialog.setLabelText("Node name:"); 
@@ -180,10 +238,12 @@ void MainPanel::savePipelineBtnHandler(void)
   }
   void MainPanel::addEdgeBtnHandler(void)
   {
+      if(!pipeline_widget->graph) return;
       pipeline_widget->addEdge();
   }
   void MainPanel::removeBtnHandler(void)
   {
+      if(!pipeline_widget->graph) return;
       pipeline_widget->graph->RemoveSelectedElement();
       pipeline_widget->draw();
   }

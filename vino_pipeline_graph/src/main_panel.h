@@ -19,6 +19,7 @@
 #include <QSize>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QLineEdit>
 #include "graph_panel.h"
 
 
@@ -71,9 +72,11 @@ private Q_SLOTS:
   void removeBtnHandler(void);
   void loadPipelineBtnHandler(void);
   void savePipelineBtnHandler(void);
+  void updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params);
 
 protected:
     QVBoxLayout* main_layout;
+    QVBoxLayout* attribute_layout;
     QHBoxLayout *controller_layout;
     QHBoxLayout *editor_layout;
     PipelinePaintWidget *pipeline_widget;
@@ -84,6 +87,17 @@ private:
   QPushButton * btn_remove;
   QPushButton * btn_load_pipeline;
   QPushButton * btn_save_pipeline;
+
+  //Attribute Display pannel:
+  QLineEdit * edit_name;
+  QLineEdit * edit_node_type;
+  QLineEdit * edit_model;
+  QLineEdit * edit_engine;
+  QLineEdit * edit_label;
+  QPushButton * btn_apply;
+  QPushButton * btn_clear;
+  
+  
 
 //   QLineEdit* output_topic_editor_;
 

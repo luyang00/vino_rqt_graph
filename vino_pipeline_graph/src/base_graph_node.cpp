@@ -280,12 +280,49 @@ bool Graph::makeConnection(std::string name_parent, std::string name_child)
         removeIsolatedNode(node_child);
 
         printIsolatedNodes();
+        return true;
     }
     else
     {
         return false;
     }
     
+}
+
+bool  Graph::makeConnection(
+    std::string name_parent, Node::NodeParams param_parent,
+    std::string name_child,  Node::NodeParams param_child)
+{
+    bool ret =  makeConnection(name_parent, name_child);
+    
+    std::cout << "HERE ????" << " ret:" << ret << std::endl;
+    if(ret)
+    {
+        std::cout << "FIND ????" << std::endl;
+
+        Node * node_parent = root_->findChildByName(name_parent) ? root_->findChildByName(name_parent) : findIsolatedNode(name_parent);
+        Node * node_child = root_->findChildByName(name_child) ? root_->findChildByName(name_child) : findIsolatedNode(name_child);
+      
+        
+        node_parent->setNodeParams(param_parent);
+        node_child->setNodeParams(param_child);
+
+        std::cout <<"???: " << node_parent->getNodeParams().model << std::endl; 
+    }
+
+    return ret; 
+}
+
+Node::NodeParams Graph::getNodeParams(std::string node_name)
+{
+    Node * node = root_->findChildByName(node_name) ?  root_->findChildByName(node_name) : findIsolatedNode(node_name) ;
+    return node->getNodeParams();
+}   
+
+void Graph::setNodeParams(std::string node_name,Node::NodeParams params)
+{
+        Node * node = root_->findChildByName(node_name) ?  root_->findChildByName(node_name) : findIsolatedNode(node_name) ;
+        node->setNodeParams(params);
 }
 
 void Graph::removeConnection(std::string name_parent, std::string name_child)
@@ -376,5 +413,8 @@ int Graph::getMaxWidth()
 {
     return root_->getMaxWidth();
 }
+
+
+
 
 }
