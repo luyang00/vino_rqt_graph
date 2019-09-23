@@ -10,7 +10,7 @@
 #include <QString>
 #include <QLine>
 #include <QMessageBox>
-#include <QVector>
+//#include <QVector>
 #include <QPolygon>
 #define RECT_HEIGHT 30.0
 #define RECT_WIDTH 115.0
@@ -458,7 +458,7 @@ namespace vino_pipeline_graph{
             
             
         }
-        void addNewNode(std::string node_name)
+        void addNewNode(vino_pipeline_graph::Node::NodeParams params)
         {   
             if(selected_node)
             {   
@@ -467,7 +467,7 @@ namespace vino_pipeline_graph{
             if(selected_edge)
                 selected_edge->color.setRgb(0,0,0,255);
             
-            if(root_->findChildByName(node_name) || findIsolatedNode(node_name))
+            if(root_->findChildByName(params.name) || findIsolatedNode(params.name))
             {
                 
                 QMessageBox message(QMessageBox::NoIcon, "Failed", "Create faield, node duplicated!"); 
@@ -475,14 +475,17 @@ namespace vino_pipeline_graph{
 
                 return;
             }
-            UIPipelineNode * new_node =   (UIPipelineNode *)makeNode(node_name);
+            UIPipelineNode * new_node =   (UIPipelineNode *)makeNode(params.name);
             new_node->rect.setWidth(((UIPipelineNode *)root_)->rect.width());
             new_node->rect.setHeight(((UIPipelineNode *)root_)->rect.height());
             new_node->color.setRgb(125, 125, 125, 255);
-
+            new_node->setNodeParams(params);
             selected_node = new_node;
         }
-
+        void setSelectedNodeParams(vino_pipeline_graph::Node::NodeParams params)
+        {
+            selected_node->setNodeParams(params);
+        }
         void RemoveSelectedElement()
         {
             if(selected_node)

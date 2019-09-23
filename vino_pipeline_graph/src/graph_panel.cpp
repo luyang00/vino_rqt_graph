@@ -22,6 +22,7 @@ PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
   mouse_release(true),
   mouse_press(false)
 {
+    
     // this->resize(400,566);
     QPalette   palette;
     palette.setBrush(QPalette::Window, QBrush(Qt::white));
@@ -46,25 +47,61 @@ PipelinePaintWidget::PipelinePaintWidget( QFrame* parent )
 // arc-arrows representing wheel motion.  It is not particularly
 // relevant to learning how to make an RViz plugin, so I will kind of
 // skim it.
-void PipelinePaintWidget::loadPipeline(std::string file_path)
+std::vector<std::string> PipelinePaintWidget::loadPipeline(std::string file_path)
 {
-    delete graph;
-    graph = NULL;
-    graph= new UIPipelineGraph(this, 640,480);
-    graph->parsePipeline(file_path);
+    
+
+
+    //To-do refector code 
+    //try to get pipeline numbers 
+    Params::ParamManager::getInstance().parse(file_path);
+    auto pipelines = Params::ParamManager::getInstance().getPipelines();
+    std::vector<std::string> pipeline_names;
+    for( int i=0;i< pipelines.size();i++)
+    {
+        
+        UIPipelineGraph * pipeline_graph =  new UIPipelineGraph(this, 640,480);
+        pipeline_graph->parsePipeline(file_path,i);
+
+        pipeline_names.push_back(pipeline_graph->getPipelineName());
+        graphs.push_back(pipeline_graph);
+        // graph= new UIPipelineGraph(this, 640,480);
+        // graph->parsePipeline(file_path);
+  
+    }
+
+    graph= graphs[0];
+
+   
     isResize = true;
     update();
+    return pipeline_names;
 
+}
+
+void PipelinePaintWidget::createNewPipeline(std::string pipeline_name,std::string input_node_name)
+{
+    UIPipelineGraph * pipeline_graph =  new UIPipelineGraph(this, 640,480);
+    pipeline_graph->setPipelineName(pipeline_name);
+    pipeline_graph->makeRoot(input_node_name);
+    graphs.push_back(pipeline_graph);
+    graph= graphs[graphs.size()-1];
+    isResize = true;
+    update();
 }
 void PipelinePaintWidget::savePipeline(std::string file_path)
 {
-   graph->exportPipeline(file_path);
-
+    std::vector< Params::ParamManager::PipelineParams> pipelines_params;
+    for(int i=0;i< graphs.size();i++)
+    {
+        
+        auto pipe_param = graphs[i]->exportPipeline(file_path);
+        pipelines_params.push_back(pipe_param);
+    }
     
+    Params::ParamManager::getInstance().save(pipelines_params,file_path);
   
-
-   
-    
+     
   
     
 }
@@ -111,11 +148,13 @@ void PipelinePaintWidget::addEdge(void)
     isAddingEdge = true;
  
 }
-void PipelinePaintWidget::addNode(std::string name)
+void PipelinePaintWidget::addNode(vino_pipeline_graph::Node::NodeParams params)
 {
     if(!graph) return;
-    graph->addNewNode(name);
+    graph->addNewNode(params);
 }
+
+
 
 void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
 {
@@ -146,7 +185,13 @@ void PipelinePaintWidget::mousePressEvent(QMouseEvent *event)
            
             Q_EMIT __graph_select_node(params);
         }
-        if(is_select_edge) Q_EMIT __graph_select_edge();
+        else
+        {
+           if(is_select_edge) Q_EMIT __graph_select_edge();
+           Q_EMIT __graph_loose_focus_node();
+           
+        }
+        
         update();
 		//setMouseState( Qt::MouseState::L_C, 0);
 	}

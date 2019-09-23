@@ -104,7 +104,9 @@ class ParamManager  // singleton
   void parse(std::string path);
   void save(const ParamManager::PipelineParams& pipeline,
                     const std::string& path);
-
+                    
+  void save( const std::vector<ParamManager::PipelineParams> & pipelines,
+                         const std::string& path);
   /**
    * @brief Retrieve pipeline names.
    * @return A list of string storing pipelines' names.

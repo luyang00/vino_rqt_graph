@@ -6,15 +6,21 @@
 #include <QFrame>
 #include <QScrollArea>
 #include "ui_graph_node.h"
+#include <QVector>
+
 namespace vino_pipeline_graph
 {
 
 class PipelinePaintWidget: public QWidget
 {
+
+
 Q_OBJECT
 
 private:
+    QVector<UIPipelineGraph *> graphs;
     UIPipelineGraph * graph;
+   
     QPoint pos_mouse_press;
     bool mouse_press,mouse_release;
 
@@ -28,7 +34,8 @@ public:
   PipelinePaintWidget( QFrame* parent = 0 );
 
   // We override QWidget::paintEvent() to do custom painting.
-  virtual void loadPipeline(std::string file_path);
+  virtual std::vector<std::string> loadPipeline(std::string file_path);
+  virtual void createNewPipeline(std::string pipeline_name,std::string input_node_name);
   virtual void savePipeline(std::string file_path);
   virtual void paintEvent( QPaintEvent* event );
   virtual void mousePressEvent(QMouseEvent *event);
@@ -36,7 +43,7 @@ public:
   virtual void mouseMoveEvent(QMouseEvent *event);
   virtual void mouseDoubleClickEvent(QMouseEvent *event);
   virtual void addEdge(void);
-  virtual void addNode(std::string name);
+  virtual void addNode(vino_pipeline_graph::Node::NodeParams params);
   
 
 //   // We override the mouse events and leaveEvent() to keep track of
@@ -58,6 +65,7 @@ public:
 Q_SIGNALS:
   void __graph_select_node(vino_pipeline_graph::Node::NodeParams);
   void __graph_select_edge();
+  void __graph_loose_focus_node();
 protected:
 
 };

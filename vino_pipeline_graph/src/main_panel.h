@@ -18,10 +18,18 @@
 #include <QBrush>
 #include <QSize>
 #include <QFileDialog>
+#include <QDialog>
 #include <QInputDialog>
+#include <QSpinBox>
 #include <QLineEdit>
+#include <QFormLayout>
+#include <QDialogButtonBox>
+#include <QComboBox>
+#include <QStringList>
+#include <QIcon>
+#include <QResource>
 #include "graph_panel.h"
-
+#include <QToolBar>
 
 #endif
 
@@ -67,12 +75,17 @@ public Q_SLOTS:
   virtual void paintEvent( QPaintEvent* event );
 
 private Q_SLOTS:
+  void selectPipelineHandler(void);
   void addNodeBtnHandler(void);
   void addEdgeBtnHandler(void);
   void removeBtnHandler(void);
   void loadPipelineBtnHandler(void);
   void savePipelineBtnHandler(void);
   void updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params);
+  void clearAttributeDisplay(void);
+  void applyChangeBtnHandler(void);
+  void createPipelineHandler(void);
+
 
 protected:
     QVBoxLayout* main_layout;
@@ -82,15 +95,20 @@ protected:
     PipelinePaintWidget *pipeline_widget;
 
 private:
+
+  QPushButton *btn_add_pipeline;
+  QPushButton *btn_del_pipeline;
   QPushButton * btn_addNode;
   QPushButton * btn_addEdge;
   QPushButton * btn_remove;
   QPushButton * btn_load_pipeline;
   QPushButton * btn_save_pipeline;
 
+  QComboBox * combo_pipeline_names;
+
   //Attribute Display pannel:
   QLineEdit * edit_name;
-  QLineEdit * edit_node_type;
+  QLineEdit * edit_type;
   QLineEdit * edit_model;
   QLineEdit * edit_engine;
   QLineEdit * edit_label;

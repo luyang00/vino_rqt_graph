@@ -90,7 +90,7 @@ namespace vino_pipeline_graph{
             {
                 node = root_;
             }
-
+            
             //Push node into PipelineParams structure
             auto node_params =  node->getNodeParams();
 
@@ -170,7 +170,7 @@ namespace vino_pipeline_graph{
     public:
         PipelineGraph(): Graph(){};
         
-        void parsePipeline(std::string file_path)
+        void parsePipeline(std::string file_path, int pipeline_index)
         {
             
             Params::ParamManager::getInstance().parse(file_path);
@@ -179,18 +179,18 @@ namespace vino_pipeline_graph{
             auto pcommon = Params::ParamManager::getInstance().getCommon();
             auto pipelines = Params::ParamManager::getInstance().getPipelines();
            
-            if (pipelines.size() < 1) throw std::logic_error("Pipeline parameters should be set!");
+            if (pipelines.size() < pipeline_index) throw std::logic_error("Pipeline parameters not match");
 
-            this->setPipelineName(pipelines[0].name);
+            this->setPipelineName(pipelines[pipeline_index].name);
             // Only use the first pipeline if there are several.
-            this->makeRoot(pipelines[0].inputs[0]);
+            this->makeRoot(pipelines[pipeline_index].inputs[0]);
             
             Node::NodeParams params_parent,params_child;
 
-            for (auto it = pipelines[0].connects.begin(); it != pipelines[0].connects.end(); ++it) {
+            for (auto it = pipelines[pipeline_index].connects.begin(); it != pipelines[pipeline_index].connects.end(); ++it) {
                 
-                    auto param_parent = parseNodePrams(it->first, pipelines[0]);
-                    auto param_child =  parseNodePrams(it->second, pipelines[0]);
+                    auto param_parent = parseNodePrams(it->first, pipelines[pipeline_index]);
+                    auto param_child =  parseNodePrams(it->second, pipelines[pipeline_index]);
 
                    
                     this->makeConnection(it->first, param_parent,
@@ -200,13 +200,14 @@ namespace vino_pipeline_graph{
 
       
         }
-        void exportPipeline(std::string file_path)
+        Params::ParamManager::PipelineParams exportPipeline(std::string file_path)
         {
             Params::ParamManager::PipelineParams pipeline_params;
+            pipeline_params.name = getPipelineName();
             getPipelineParams(pipeline_params);
-            std::cout << "try export pipeline" << std::endl;
-            
-            Params::ParamManager::getInstance().save(pipeline_params,file_path);
+            return  pipeline_params;
+
+            //Params::ParamManager::getInstance().save(pipeline_params,file_path);
         }
     }; 
 }

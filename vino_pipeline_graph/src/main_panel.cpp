@@ -2,6 +2,8 @@
 
 
 #include <geometry_msgs/Twist.h>
+#include <QCoreApplication>
+
 
 #include "main_panel.h"
 
@@ -15,7 +17,11 @@ namespace vino_pipeline_graph
 MainPanel::MainPanel( QWidget* parent )
   : rviz::Panel( parent )
 {
+  //locate rviz resources file path
+  QString resource_path_prefix = QCoreApplication::applicationDirPath () + "/../share/rviz/icons/";
 
+
+  std::cout << "QT: "<< resource_path_prefix.toStdString()<< std::endl;
   main_layout = new QVBoxLayout;
 
 
@@ -24,6 +30,7 @@ MainPanel::MainPanel( QWidget* parent )
   
   controller_layout = new QHBoxLayout;
   
+
    
   btn_load_pipeline = new QPushButton("Load");
   btn_save_pipeline = new QPushButton("Save");
@@ -34,7 +41,26 @@ MainPanel::MainPanel( QWidget* parent )
   controller_layout ->addWidget(btn_save_pipeline );
 
   controller_layout->addWidget( new QLabel( "pipeline:" ));
-  controller_layout->addWidget( new  QComboBox());
+  combo_pipeline_names = new QComboBox();
+  //to-do change path
+
+
+  connect(combo_pipeline_names, SIGNAL (activated(int)), this, SLOT (selectPipelineHandler()));
+  controller_layout->addWidget( combo_pipeline_names);
+
+  btn_add_pipeline=new QPushButton();
+  QPixmap pix_add(resource_path_prefix + "plus.png");
+  btn_add_pipeline->setToolTip( "Add a new pipeline" );
+  btn_add_pipeline->setIcon(QIcon(pix_add));
+  controller_layout->addWidget(btn_add_pipeline);
+  connect(btn_add_pipeline, SIGNAL (released()), this, SLOT (createPipelineHandler()));
+
+
+  btn_del_pipeline=new QPushButton();
+  QPixmap pix_del(resource_path_prefix + "minus.png");
+  btn_del_pipeline->setIcon(QIcon(pix_del));
+  controller_layout->addWidget(btn_del_pipeline);
+
   controller_layout->addWidget( new QPushButton("Start"));
   controller_layout->addWidget( new QPushButton("Pause"));
   controller_layout->addWidget( new QPushButton("Stop"));
@@ -94,8 +120,8 @@ MainPanel::MainPanel( QWidget* parent )
   //attribute param node_type
   QHBoxLayout* attri_type_layout = new QHBoxLayout;
   attri_type_layout ->addWidget(new QLabel("Type  :"));
-  edit_node_type = new QLineEdit();
-  attri_type_layout->addWidget(edit_node_type);
+  edit_type = new QLineEdit();
+  attri_type_layout->addWidget(edit_type);
   attribute_layout->addLayout(attri_type_layout);
 
   //attribute parm model 
@@ -126,6 +152,8 @@ MainPanel::MainPanel( QWidget* parent )
   attr_action_layout->addWidget(btn_apply);
   attribute_layout->addLayout( attr_action_layout);
 
+  connect(btn_apply, SIGNAL (released()), this, SLOT (applyChangeBtnHandler()));
+
   pLayout->addLayout(attribute_layout,0,4,Qt::AlignTop);
 
   main_layout->addLayout( pLayout );
@@ -153,7 +181,8 @@ MainPanel::MainPanel( QWidget* parent )
 //   connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
 //   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
 //   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
-
+  connect(pipeline_widget, SIGNAL (__graph_loose_focus_node()), this, SLOT (clearAttributeDisplay()));
+  
   connect(pipeline_widget, SIGNAL (__graph_select_node(vino_pipeline_graph::Node::NodeParams)), this, SLOT (updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams)));
   //connect(pipeline_widget, SIGNAL (__graph_select_edge()), this, SLOT (updateAttributeDisplay()));
   // Start the timer.
@@ -164,14 +193,18 @@ MainPanel::MainPanel( QWidget* parent )
 
 void MainPanel::updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params)
 {
-  
- 
-  std::cout << "emit params: " << params.name << ", " << params.type << ", " << params.engine << std::endl;
   edit_name->setText(QString::fromStdString(params.name));
   edit_model->setText(QString::fromStdString(params.model));
   edit_engine->setText(QString::fromStdString(params.engine));
   edit_label->setText(QString::fromStdString(params.label));
-  
+
+}
+void MainPanel::clearAttributeDisplay()
+{
+  edit_name->setText(QString(""));
+  edit_model->setText(QString(""));
+  edit_engine->setText(QString(""));
+  edit_label->setText(QString(""));
 
 }
 void MainPanel::paintEvent( QPaintEvent* event )
@@ -208,7 +241,74 @@ void MainPanel::loadPipelineBtnHandler(void)
 {
   std::string file_name = QFileDialog::getOpenFileName(NULL,"Load pipeline file(*.yaml)",".","*.yaml").toStdString();
 
-  pipeline_widget->loadPipeline(file_name);
+  auto pipeline_names = pipeline_widget->loadPipeline(file_name);
+  combo_pipeline_names->clear();
+  for(int i=0; i<pipeline_names.size();i++)
+      combo_pipeline_names->addItem(QString::fromStdString(pipeline_names[i]));
+
+}
+
+void MainPanel::createPipelineHandler(void)
+{
+  
+    QDialog dialog(this);
+    dialog.setWindowTitle(QString("Create a new pipeline"));
+    QFormLayout form(&dialog);
+    // Pipeline name
+    QLineEdit *edit_node_name = new QLineEdit(&dialog);
+    form.addRow(QString("Pipeline name: "), edit_node_name);
+    // Input from
+    QComboBox *combo_input_name = new QComboBox(&dialog);
+    //to-do from a configure file
+    combo_input_name->addItem("StandardCamera");
+    combo_input_name->addItem("RealSenseCamera");
+
+    form.addRow(QString("Input type: "), combo_input_name);
+    
+
+
+
+    QLineEdit *edit_camera_topic = new QLineEdit(&dialog);
+    form.addRow(QString("Camera_topic: "), edit_camera_topic);
+    QLineEdit *edit_input_path = new QLineEdit(&dialog);
+    form.addRow(QString("Input path: "), edit_input_path);
+    QLineEdit *edit_custom_cpu_library = new QLineEdit(&dialog);
+    form.addRow(QString("Custom_cpu_library: "), edit_custom_cpu_library);
+    QComboBox *combo_enable_performance_count = new QComboBox(&dialog);
+    combo_enable_performance_count->addItem("true");
+    combo_enable_performance_count->addItem("false");
+    form.addRow(QString("Enable_performance_count: "), combo_enable_performance_count);
+
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+    if (dialog.exec() == QDialog::Accepted)
+    {
+      pipeline_widget->createNewPipeline(edit_node_name->text().toStdString(),
+        combo_input_name->currentText().toStdString());
+      combo_pipeline_names->addItem(edit_node_name->text());
+      auto num_pipelines = combo_pipeline_names->count();
+      combo_pipeline_names->setCurrentIndex(num_pipelines-1);
+        
+    }
+
+    
+}
+void MainPanel::selectPipelineHandler(void)
+{
+ 
+    int index =  combo_pipeline_names->currentIndex();
+    std::cout << "select " << index << std::endl;
+    pipeline_widget->graph = pipeline_widget->graphs[index];
+    pipeline_widget->isResize = true;
+    pipeline_widget->draw();    
+  
+  
 
 }
 
@@ -218,21 +318,77 @@ void MainPanel::savePipelineBtnHandler(void)
     pipeline_widget->savePipeline(file_name);
 }
 
+void MainPanel::applyChangeBtnHandler(void)
+{
+ 
+  vino_pipeline_graph::Node::NodeParams params;
+  params.name = edit_name->text().toStdString();
+  params.model = edit_model->text().toStdString();
+  params.engine = edit_engine->text().toStdString();
+  params.label = edit_label->text().toStdString();
 
+  pipeline_widget->graph->setSelectedNodeParams(params);
+  
+}
   void MainPanel::addNodeBtnHandler(void)
   {
     if(!pipeline_widget->graph) return;
 
-      QInputDialog new_node_dialog(this); 
-      new_node_dialog.setWindowTitle("Add a new node"); 
-      new_node_dialog.setLabelText("Node name:"); 
-      new_node_dialog.setInputMode(QInputDialog::TextInput);
-      if(new_node_dialog.exec() == QInputDialog::Accepted)
-      {
-          std::string node_name = new_node_dialog.textValue().toStdString();
+    QDialog dialog(this);
+    dialog.setWindowTitle(QString("Add a new node"));
+    QFormLayout form(&dialog);
+    // Name
+    QLineEdit *edit_node_name = new QLineEdit(&dialog);
+    form.addRow(QString("Node name: "), edit_node_name);
+    // Type
+    QComboBox *combo_node_type = new QComboBox(&dialog);
+    QStringList nodeTypeList;
+    nodeTypeList<<"Input"<<"Inference"<<"Output";
+    combo_node_type->addItems(nodeTypeList);
+    form.addRow(QString("Node Type: "), combo_node_type);
+    //Model
+    QLineEdit *edit_model = new QLineEdit(&dialog);
+    form.addRow(QString("Node Model: "), edit_model);
+    //Engine
+    QComboBox *combo_engine = new QComboBox(&dialog);
+    QStringList engineList;
+    engineList<<"CPU"<<"GPU"<<"Myriad";
+    combo_engine->addItems(engineList);
+    form.addRow(QString("Node Engine: "),combo_engine);
+    //label
+    QLineEdit *edit_node_label = new QLineEdit(&dialog);
+    form.addRow(QString("Node label: "), edit_node_label);
+
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+       vino_pipeline_graph::Node::NodeParams params;
+       params.name = edit_node_name->text().toStdString() ;
+       params.type = (vino_pipeline_graph::Node::NodeType) combo_node_type->currentIndex();
+       params.engine =  combo_engine->currentText().toStdString();
+       params.model = edit_model->text().toStdString() ;
+       params.label = edit_node_label->text().toStdString() ;
+       pipeline_widget->addNode(params);
+           
+    }
+
+      // QInputDialog new_node_dialog(this); 
+      // new_node_dialog.setWindowTitle("Add a new node"); 
+      // new_node_dialog.setLabelText("Node name:"); 
+      // new_node_dialog.setInputMode(QInputDialog::TextInput);
+      // if(new_node_dialog.exec() == QInputDialog::Accepted)
+      // {
+      //     std::string node_name = new_node_dialog.textValue().toStdString();
  
-          pipeline_widget->addNode(node_name);
-      }
+      //     pipeline_widget->addNode(node_name);
+      // }
       pipeline_widget->draw();
      
   }

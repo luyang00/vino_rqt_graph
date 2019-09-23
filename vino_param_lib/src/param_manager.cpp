@@ -198,6 +198,8 @@ void ParamManager::parse(std::string path)
 
   YAML_PARSE(doc, "Pipelines", pipelines_)
   YAML_PARSE(doc, "Common", common_)
+  
+  //return pipelines_.size();
 }
 
 std::vector<std::string> ParamManager::getPipelineNames() const
@@ -355,21 +357,35 @@ void operator<<(YAML::Emitter& out, ParamManager::CommonParams& common)
   //to-do
   std::cout << "Export commont not implemented yet." << std::endl;
 }
-void ParamManager::save( const ParamManager::PipelineParams& pipeline,
-                         const std::string& path)
+void ParamManager::save(const ParamManager::PipelineParams& pipeline,
+                    const std::string& path)
 {
-  std::vector<PipelineParams> pipelines;
-  pipelines.push_back(pipeline);
+  // std::vector<PipelineParams> pipelines;
+  // pipelines.push_back(pipeline);
 
   std::ofstream fout(path);
   YAML::Emitter out(fout);
   fout << "Pipelines:" << std::endl;
 
-  out << pipelines;
+  out << pipeline;
   // fout << std::endl << "Common:" << std::endl;
   // out << common_;
 
 }
 
+void ParamManager::save( const std::vector<ParamManager::PipelineParams> & pipelines,
+                         const std::string& path)
+{
+  std::ofstream fout(path);
+  YAML::Emitter out(fout);
+
+  fout << "Pipelines:" << std::endl;
+out<< YAML::BeginSeq;
+  for (int i=0;i< pipelines.size();i++)
+  {
+    out << pipelines[i];
+  }
+  out<< YAML::EndSeq;
+}
 
 }  // namespace Params
