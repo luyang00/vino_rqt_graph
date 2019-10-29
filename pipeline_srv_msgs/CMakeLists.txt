@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Intel Corporation
+# Copyright (c) 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,40 +13,38 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(vino_param_lib2)
+
+project(pipeline_srv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  roslint
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  message_generation
+)
+
+add_message_files(DIRECTORY msg FILES
+  PipelineRequest.msg
+  Pipeline.msg
+  Pipelines.msg
+)
+
+add_service_files(FILES
+  PipelineSrv.srv
+)
+generate_messages(DEPENDENCIES
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+
 )
 
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp roslint
-)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-include_directories(
-  include
-  ${yaml_cpp_vendor_DIR}/../../../opt/yaml_cpp_vendor/include)
-
-add_library(${PROJECT_NAME} SHARED
-  src/param_manager.cpp
-  )
-
-add_dependencies(${PROJECT_NAME}
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  yaml-cpp
+  CATKIN_DEPENDS
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  message_runtime
 )
 
 # Flags
@@ -87,27 +85,4 @@ if(UNIX OR APPLE)
   set( CUDA_PROPAGATE_HOST_FLAGS OFF )
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -D_FORTIFY_SOURCE=2")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
-
-  # Add x86 intrinsic compiler support
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mf16c")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-endif()
-
-# Install
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Install header files
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
-if(CATKIN_ENABLE_TESTING)
-  find_package(roslint REQUIRED)
-  roslint_cpp()
-  roslint_add_test()
 endif()

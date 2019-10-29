@@ -4,6 +4,9 @@
 #ifndef Q_MOC_RUN
 #include <ros/ros.h>
 #include <rviz/panel.h>
+#include <thread>
+
+#include "service/pipeline_service.h"
 
 #include <QPainter>
 #include <QLineEdit>
@@ -30,7 +33,9 @@
 #include <QResource>
 #include "graph_panel.h"
 #include <QToolBar>
-
+#include <QThread>
+#include <QMenu>
+#include <QDir>
 #endif
 
 class QLineEdit;
@@ -84,9 +89,14 @@ private Q_SLOTS:
   void updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params);
   void clearAttributeDisplay(void);
   void applyChangeBtnHandler(void);
+  void createPipelineFromExamplesHandler(void);
   void createPipelineHandler(void);
+  void startPipelineHandler(void);
+  void pausePipelineHandler(void);
+  void stopPipelineHandler(void);
 
-
+  void selectModelTypeHandler(int index);
+  void selectNodeTypeHandler(int index);
 protected:
     QVBoxLayout* main_layout;
     QVBoxLayout* attribute_layout;
@@ -95,6 +105,8 @@ protected:
     PipelinePaintWidget *pipeline_widget;
 
 private:
+
+ 
 
   QPushButton *btn_add_pipeline;
   QPushButton *btn_del_pipeline;
@@ -107,6 +119,12 @@ private:
   QComboBox * combo_pipeline_names;
 
   //Attribute Display pannel:
+  QLabel * label_name;
+  QLabel * label_type;
+  QLabel * label_model;
+  QLabel * label_engine;
+  QLabel * label_label;
+
   QLineEdit * edit_name;
   QLineEdit * edit_type;
   QLineEdit * edit_model;
@@ -115,7 +133,34 @@ private:
   QPushButton * btn_apply;
   QPushButton * btn_clear;
   
+
+  QPushButton * btn_startPipeline;
+  QPushButton * btn_pausePipeline ;
+  QPushButton * btn_stopPipeline ;
+
+
   
+  vino_service::PipelineService * pipeline_srv;
+
+  //node name
+  QLabel *label_node_name;
+  QLineEdit *edit_node_name;
+
+  QComboBox *combo_node_type;
+  //choose model
+  QLabel * label_node_model;
+  QComboBox *combo_node_model ;  
+  QLineEdit *edit_node_model;
+  //choose engine
+  QLabel * label_node_engine;
+  QComboBox *combo_node_engine;
+  //choose label
+  QLabel * label_node_label;
+  QLineEdit *edit_node_label;
+
+  //choose type of output
+  QLabel * label_node_output_type;
+  QComboBox  *combo_node_output_type;
 
 //   QLineEdit* output_topic_editor_;
 

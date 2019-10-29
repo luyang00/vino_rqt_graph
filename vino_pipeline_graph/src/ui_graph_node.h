@@ -268,7 +268,7 @@ namespace vino_pipeline_graph{
             selectdNode(node_link_target);
             UIPipelineNode * target_node =  selected_node;
            
-            if(source_node !=NULL && target_node!=NULL && target_node!=root_)
+            if(source_node !=NULL && target_node!=NULL && target_node!=root_ && source_node->getNodeParams().type != Node::NodeType::Output)
             {
                 std::cout << "make connection" <<  source_node->getNodeName() << " - " <<target_node->getNodeName();
                 return makeConnection( source_node->getNodeName(),target_node->getNodeName());

@@ -56,6 +56,9 @@ std::vector<std::string> PipelinePaintWidget::loadPipeline(std::string file_path
     //try to get pipeline numbers 
     Params::ParamManager::getInstance().parse(file_path);
     auto pipelines = Params::ParamManager::getInstance().getPipelines();
+
+    std::cout << pipelines.size() << std::endl;
+
     std::vector<std::string> pipeline_names;
     for( int i=0;i< pipelines.size();i++)
     {
@@ -81,9 +84,13 @@ std::vector<std::string> PipelinePaintWidget::loadPipeline(std::string file_path
 
 void PipelinePaintWidget::createNewPipeline(std::string pipeline_name,std::string input_node_name)
 {
+    Node::NodeParams params;
+    params.type = Node::NodeType::Input;
+    params.name = input_node_name;
     UIPipelineGraph * pipeline_graph =  new UIPipelineGraph(this, 640,480);
     pipeline_graph->setPipelineName(pipeline_name);
     pipeline_graph->makeRoot(input_node_name);
+    pipeline_graph->setNodeParams(input_node_name,params);
     graphs.push_back(pipeline_graph);
     graph= graphs[graphs.size()-1];
     isResize = true;
@@ -101,9 +108,6 @@ void PipelinePaintWidget::savePipeline(std::string file_path)
     
     Params::ParamManager::getInstance().save(pipelines_params,file_path);
   
-     
-  
-    
 }
 void PipelinePaintWidget::paintEvent( QPaintEvent* event )
 {

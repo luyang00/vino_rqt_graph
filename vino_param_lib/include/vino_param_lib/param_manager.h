@@ -102,11 +102,13 @@ class ParamManager  // singleton
    * @return None.
    */
   void parse(std::string path);
+  void parseConfs(std::string path);
   void save(const ParamManager::PipelineParams& pipeline,
                     const std::string& path);
                     
   void save( const std::vector<ParamManager::PipelineParams> & pipelines,
                          const std::string& path);
+  std::string toString();
   /**
    * @brief Retrieve pipeline names.
    * @return A list of string storing pipelines' names.
@@ -130,6 +132,11 @@ class ParamManager  // singleton
    */
   PipelineParams getPipeline(const std::string& name) const;
 
+
+  std::vector<InferenceParams> getInfersSupported() const
+  {
+    return infers_supported;
+  }
   /**
    * @brief Retrieve common parameters.
    * @return struct CommonParams storing all common parameters.
@@ -139,7 +146,7 @@ class ParamManager  // singleton
     return common_;
   }
 
- 
+   
 
  private:
   ParamManager()
@@ -149,6 +156,7 @@ class ParamManager  // singleton
   void operator=(ParamManager const&);
 
   std::vector<PipelineParams> pipelines_;
+  std::vector<InferenceParams> infers_supported;
   CommonParams common_;
 };
 

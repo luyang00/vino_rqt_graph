@@ -17,6 +17,7 @@ namespace vino_pipeline_graph
 MainPanel::MainPanel( QWidget* parent )
   : rviz::Panel( parent )
 {
+  
   //locate rviz resources file path
   QString resource_path_prefix = QCoreApplication::applicationDirPath () + "/../share/rviz/icons/";
 
@@ -53,7 +54,18 @@ MainPanel::MainPanel( QWidget* parent )
   btn_add_pipeline->setToolTip( "Add a new pipeline" );
   btn_add_pipeline->setIcon(QIcon(pix_add));
   controller_layout->addWidget(btn_add_pipeline);
-  connect(btn_add_pipeline, SIGNAL (released()), this, SLOT (createPipelineHandler()));
+  QMenu *menu = new QMenu(this);
+  
+  QMenu *menu_create_from_example = new QMenu("create from examples");
+  QAction *act_create_from_new = new QAction(menu);
+  act_create_from_new->setText(QString("create a new pipeline"));  
+  menu->addMenu(menu_create_from_example);
+  menu->addAction(act_create_from_new);
+
+
+  btn_add_pipeline->setMenu(menu);
+  connect(menu_create_from_example, SIGNAL (triggered()), this, SLOT (createPipelineFromExamplesHandler()));
+  connect(act_create_from_new, SIGNAL (triggered()), this, SLOT (createPipelineHandler()));
 
 
   btn_del_pipeline=new QPushButton();
@@ -61,15 +73,23 @@ MainPanel::MainPanel( QWidget* parent )
   btn_del_pipeline->setIcon(QIcon(pix_del));
   controller_layout->addWidget(btn_del_pipeline);
 
-  controller_layout->addWidget( new QPushButton("Start"));
-  controller_layout->addWidget( new QPushButton("Pause"));
-  controller_layout->addWidget( new QPushButton("Stop"));
+  btn_startPipeline = new QPushButton("Start");
+  btn_pausePipeline = new QPushButton("Pause");
+  btn_stopPipeline = new QPushButton("Stop");
+  connect(btn_startPipeline, SIGNAL (released()), this, SLOT (startPipelineHandler()));
+  connect(btn_pausePipeline, SIGNAL (released()), this, SLOT (pausePipelineHandler()));
+  connect(btn_stopPipeline , SIGNAL (released()), this, SLOT (stopPipelineHandler()));
+
+  controller_layout->addWidget( btn_startPipeline);
+  controller_layout->addWidget( btn_pausePipeline);
+  controller_layout->addWidget( btn_stopPipeline);
   main_layout->addLayout( controller_layout );
 
   
-  editor_layout = new QHBoxLayout;
  
 
+  editor_layout = new QHBoxLayout;
+ 
   btn_addNode = new QPushButton("Add Node");
   btn_addEdge = new QPushButton("Add Edge");
   btn_remove = new QPushButton("Remove");
@@ -111,7 +131,8 @@ MainPanel::MainPanel( QWidget* parent )
 
   //attribute param name
   QHBoxLayout* attri_name_layout = new QHBoxLayout;
-  attri_name_layout ->addWidget(new QLabel("Name :"));
+  label_name = new QLabel("Name :");
+  attri_name_layout ->addWidget(label_name);
   edit_name = new QLineEdit();
   edit_name->setReadOnly(true);
   attri_name_layout->addWidget(edit_name);
@@ -119,36 +140,41 @@ MainPanel::MainPanel( QWidget* parent )
 
   //attribute param node_type
   QHBoxLayout* attri_type_layout = new QHBoxLayout;
-  attri_type_layout ->addWidget(new QLabel("Type  :"));
+  label_type = new QLabel("Type  :");
+  attri_type_layout ->addWidget(label_type);
   edit_type = new QLineEdit();
+  edit_type->setReadOnly(true);
+  //edit_type->setDisabled(true);
   attri_type_layout->addWidget(edit_type);
   attribute_layout->addLayout(attri_type_layout);
 
   //attribute parm model 
   QHBoxLayout* attri_model_layout = new QHBoxLayout;
-  attri_model_layout ->addWidget(new QLabel("Model :"));
+  label_model = new QLabel("Model :");
+  attri_model_layout ->addWidget(label_model);
   edit_model = new QLineEdit();
   attri_model_layout->addWidget(edit_model);
   attribute_layout->addLayout(attri_model_layout);
 
   //attribute param engine
   QHBoxLayout* attri_engine_layout = new QHBoxLayout;
-  attri_engine_layout ->addWidget(new QLabel("Engine:"));
+  label_engine = new QLabel("Engine:");
+  attri_engine_layout ->addWidget(label_engine);
   edit_engine = new QLineEdit();
   attri_engine_layout->addWidget(edit_engine);
   attribute_layout->addLayout(attri_engine_layout);
 
    //attribute param engine
   QHBoxLayout* attri_label_layout = new QHBoxLayout;
-  attri_label_layout ->addWidget(new QLabel("Label  :"));
+  label_label = new QLabel("Label  :");
+  attri_label_layout ->addWidget(label_label);
   edit_label = new QLineEdit();
   attri_label_layout->addWidget(edit_label);
   attribute_layout->addLayout(attri_label_layout);
   
   QHBoxLayout* attr_action_layout = new QHBoxLayout;
-  btn_clear = new QPushButton("Clear");
-  btn_apply = new QPushButton("Apply");
-  attr_action_layout->addWidget(btn_clear);
+
+  btn_apply = new QPushButton("Update");
   attr_action_layout->addWidget(btn_apply);
   attribute_layout->addLayout( attr_action_layout);
 
@@ -165,6 +191,7 @@ MainPanel::MainPanel( QWidget* parent )
 
    QTimer* output_timer = new QTimer( this );
 
+   
 
 
     // palette.setBrush(frame->backgroundRole(),QBrush(pixmap));
@@ -189,22 +216,69 @@ MainPanel::MainPanel( QWidget* parent )
   output_timer->start( 100 );
 
 
+
+  pipeline_srv = new vino_service::PipelineService("/openvino_toolkit/pipeline/service");
+  
+
 }
+
+
 
 void MainPanel::updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params)
 {
+  btn_apply->setEnabled(true);
   edit_name->setText(QString::fromStdString(params.name));
-  edit_model->setText(QString::fromStdString(params.model));
-  edit_engine->setText(QString::fromStdString(params.engine));
-  edit_label->setText(QString::fromStdString(params.label));
+
+  if(params.type == vino_pipeline_graph::Node::NodeType::Input )
+  {
+      label_model->hide();
+      label_engine->hide();
+      label_label->hide();
+      edit_model->hide();
+      edit_engine->hide();
+      edit_label->hide();
+
+      edit_type->setText(QString("Input"));
+
+  }
+  else if(params.type == vino_pipeline_graph::Node::NodeType::Infer )
+  {   
+      label_model->show();
+      label_engine->show();
+      label_label->show();
+      edit_model->show();
+      edit_engine->show();
+      edit_label->show();
+
+      edit_model->setText(QString::fromStdString(params.model));
+      edit_engine->setText(QString::fromStdString(params.engine));
+      edit_label->setText(QString::fromStdString(params.label));
+      
+      edit_type->setText(QString("Inference"));
+  }
+  else if(params.type == vino_pipeline_graph::Node::NodeType::Output)
+  {
+      label_model->hide();
+      label_engine->hide();
+      label_label->hide();
+
+      edit_model->hide();
+      edit_engine->hide();
+      edit_label->hide();
+
+      edit_type->setText(QString("Output"));
+      
+  }
 
 }
 void MainPanel::clearAttributeDisplay()
 {
+  btn_apply->setDisabled(true);
   edit_name->setText(QString(""));
   edit_model->setText(QString(""));
   edit_engine->setText(QString(""));
   edit_label->setText(QString(""));
+  edit_type->setText(QString(""));
 
 }
 void MainPanel::paintEvent( QPaintEvent* event )
@@ -246,6 +320,35 @@ void MainPanel::loadPipelineBtnHandler(void)
   for(int i=0; i<pipeline_names.size();i++)
       combo_pipeline_names->addItem(QString::fromStdString(pipeline_names[i]));
 
+}
+
+void MainPanel::createPipelineFromExamplesHandler(void)
+{
+  std::cout << "call" << std::endl;
+  
+  std::string path = ros::package::getPath("vino_launch") + "/param";
+
+  QDir source(QString::fromStdString(path));
+  //   if (!source.exists())
+  //       return;
+
+  if(!source.exists())
+  {
+    QMessageBox messageBox;
+    messageBox.critical(0,"Pipeline examples not found!","Please check vino_launch package and vino_launch/param/ exist");
+    return;
+  }
+
+  QStringList const files = source.entryList(QStringList() << "*.yaml", QDir::Files);
+  for( auto & f : files)
+  {
+     std::cout << f.toStdString() << std::endl;
+  }
+  
+
+  // using package::V_string;
+  // V_string packages;
+  // ros::package::getAll(packages);
 }
 
 void MainPanel::createPipelineHandler(void)
@@ -291,6 +394,7 @@ void MainPanel::createPipelineHandler(void)
     {
       pipeline_widget->createNewPipeline(edit_node_name->text().toStdString(),
         combo_input_name->currentText().toStdString());
+          
       combo_pipeline_names->addItem(edit_node_name->text());
       auto num_pipelines = combo_pipeline_names->count();
       combo_pipeline_names->setCurrentIndex(num_pipelines-1);
@@ -322,11 +426,25 @@ void MainPanel::applyChangeBtnHandler(void)
 {
  
   vino_pipeline_graph::Node::NodeParams params;
+  
   params.name = edit_name->text().toStdString();
-  params.model = edit_model->text().toStdString();
-  params.engine = edit_engine->text().toStdString();
-  params.label = edit_label->text().toStdString();
-
+  //to-do change str to marco
+  if(edit_type->text() == "Inference" ){
+ 
+    params.model = edit_model->text().toStdString();
+    params.engine = edit_engine->text().toStdString();
+    params.label = edit_label->text().toStdString();
+    params.type = vino_pipeline_graph::Node::NodeType::Infer;
+  }
+  else if(edit_type->text() == "Output" )
+  {
+    params.type = vino_pipeline_graph::Node::NodeType::Output;
+  }
+  else if(edit_type->text() == "Input" )
+  {
+    params.type = vino_pipeline_graph::Node::NodeType::Input;
+  }
+  
   pipeline_widget->graph->setSelectedNodeParams(params);
   
 }
@@ -334,35 +452,68 @@ void MainPanel::applyChangeBtnHandler(void)
   {
     if(!pipeline_widget->graph) return;
 
+    //load all supported models from config files
+    Params::ParamManager::getInstance().parseConfs("/home/intel/catkin_ws2/src/vino_rviz_plugin/vino_pipeline_graph/models.yaml");
+    auto infers_supported = Params::ParamManager::getInstance().getInfersSupported();
+
+
     QDialog dialog(this);
     dialog.setWindowTitle(QString("Add a new node"));
     QFormLayout form(&dialog);
-    // Name
-    QLineEdit *edit_node_name = new QLineEdit(&dialog);
-    form.addRow(QString("Node name: "), edit_node_name);
-    // Type
-    QComboBox *combo_node_type = new QComboBox(&dialog);
+     // Type
+    combo_node_type = new QComboBox(&dialog);
     QStringList nodeTypeList;
-    nodeTypeList<<"Input"<<"Inference"<<"Output";
+    nodeTypeList<<"Inference"<<"Output";
     combo_node_type->addItems(nodeTypeList);
     form.addRow(QString("Node Type: "), combo_node_type);
+    connect(combo_node_type, SIGNAL(currentIndexChanged(int)),this, SLOT(selectNodeTypeHandler(int)));
+    // Name
+    edit_node_name = new QLineEdit(&dialog);
+    label_node_name = new QLabel("Node name:");
+    form.addRow(label_node_name, edit_node_name);
     //Model
-    QLineEdit *edit_model = new QLineEdit(&dialog);
-    form.addRow(QString("Node Model: "), edit_model);
+    combo_node_model = new QComboBox(&dialog);
+    QStringList modelList;
+    for(auto & infer : infers_supported)  modelList << QString::fromStdString(infer.name); 
+    combo_node_model->addItems(modelList);
+
+
+    edit_node_model = new QLineEdit(&dialog);
+    QHBoxLayout* model_layout = new QHBoxLayout;
+    model_layout ->addWidget(combo_node_model);
+    model_layout ->addWidget(edit_node_model );
+    label_node_model = new QLabel("Infer model:");
+    form.addRow(label_node_model, model_layout);
+    connect(combo_node_model, SIGNAL(currentIndexChanged(int)),this, SLOT(selectModelTypeHandler(int)));
+
     //Engine
-    QComboBox *combo_engine = new QComboBox(&dialog);
+    combo_node_engine = new QComboBox(&dialog);
+    label_node_engine = new QLabel("Node Engine:");
     QStringList engineList;
     engineList<<"CPU"<<"GPU"<<"Myriad";
-    combo_engine->addItems(engineList);
-    form.addRow(QString("Node Engine: "),combo_engine);
+    combo_node_engine->addItems(engineList);
+    form.addRow(label_node_engine,combo_node_engine);
     //label
-    QLineEdit *edit_node_label = new QLineEdit(&dialog);
-    form.addRow(QString("Node label: "), edit_node_label);
+    label_node_label = new QLabel("Node label:");
+    edit_node_label = new QLineEdit(&dialog);
+    form.addRow(label_node_label, edit_node_label);
+    //Output type
+    label_node_output_type = new QLabel("Output Type");
+    combo_node_output_type = new  QComboBox(&dialog);
+    QStringList outputTypeList;
+    outputTypeList<<"Rviz"<<"ImageWindow"<<"Rostopic";
+    combo_node_output_type->addItems(outputTypeList);
+    form.addRow(label_node_output_type, combo_node_output_type);
+    label_node_output_type->hide();
+    combo_node_output_type->hide();
+    
+
 
     // Add Cancel and OK button
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
         Qt::Horizontal, &dialog);
     form.addRow(&buttonBox);
+
     QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
     QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
 
@@ -370,12 +521,22 @@ void MainPanel::applyChangeBtnHandler(void)
     // Process when OK button is clicked
     if (dialog.exec() == QDialog::Accepted) {
        vino_pipeline_graph::Node::NodeParams params;
-       params.name = edit_node_name->text().toStdString() ;
-       params.type = (vino_pipeline_graph::Node::NodeType) combo_node_type->currentIndex();
-       params.engine =  combo_engine->currentText().toStdString();
-       params.model = edit_model->text().toStdString() ;
-       params.label = edit_node_label->text().toStdString() ;
-       pipeline_widget->addNode(params);
+
+       if(combo_node_type->currentText() == "Inference")
+       {
+            params.name = edit_node_name->text().toStdString();
+            params.type = vino_pipeline_graph::Node::NodeType::Infer;//skip input from infer to output
+            params.engine =  combo_node_engine->currentText().toStdString();
+            params.model = edit_node_model->text().toStdString();
+            params.label = edit_node_label->text().toStdString();
+            pipeline_widget->addNode(params);
+       }
+       else if(combo_node_type->currentText() == "Output" )
+       {
+            params.name = combo_node_output_type->currentText().toStdString() ;
+            params.type = vino_pipeline_graph::Node::NodeType::Output;
+            pipeline_widget->addNode(params);
+       }
            
     }
 
@@ -389,8 +550,57 @@ void MainPanel::applyChangeBtnHandler(void)
  
       //     pipeline_widget->addNode(node_name);
       // }
-      pipeline_widget->draw();
+    pipeline_widget->draw();
      
+  }
+
+  void MainPanel::selectNodeTypeHandler(int index)
+  {
+      if(combo_node_type->currentText() == "Inference")
+      {
+        //For inference node
+        edit_node_name->show();
+        label_node_name->show();
+
+        combo_node_model->show();
+        edit_node_model->show();
+        label_node_model->show();
+        combo_node_engine->show();
+        label_node_engine->show();
+        label_node_label->show();
+        edit_node_label->show();
+        //For output node
+        label_node_output_type->hide();
+        combo_node_output_type->hide();
+       
+      }
+      else if(combo_node_type->currentText() == "Output" )
+      {
+        edit_node_name->hide();
+        label_node_name->hide();
+        combo_node_model->hide();
+        edit_node_model->hide();
+        label_node_model->hide();
+        combo_node_engine->hide();
+        label_node_engine->hide();
+        label_node_label->hide();
+        edit_node_label->hide();
+        //For output node
+        label_node_output_type->show();
+        combo_node_output_type->show();
+      }
+  }
+  void MainPanel::selectModelTypeHandler(int index)
+  {
+      Params::ParamManager::getInstance().parseConfs("/home/intel/catkin_ws2/src/vino_rviz_plugin/vino_pipeline_graph/models.yaml");
+      auto infers_supported = Params::ParamManager::getInstance().getInfersSupported();
+      for(int i=0;i< infers_supported.size();i++)
+      {
+        if(index == i) 
+        {
+          edit_node_model->setText(QString::fromStdString(infers_supported[i].model));
+        }
+      }
   }
   void MainPanel::addEdgeBtnHandler(void)
   {
@@ -403,6 +613,25 @@ void MainPanel::applyChangeBtnHandler(void)
       pipeline_widget->graph->RemoveSelectedElement();
       pipeline_widget->draw();
   }
+
+
+  void MainPanel::startPipelineHandler(void)
+  {
+      if(!pipeline_widget->graph) return;
+      pipeline_srv->reqStartPipeline();
+
+  }
+  void MainPanel::pausePipelineHandler(void)
+  {
+      if(!pipeline_widget->graph) return;
+      pipeline_srv->reqPausePipeline(pipeline_widget->graph-> getPipelineName());
+  }
+  void MainPanel::stopPipelineHandler(void)
+  {
+      if(!pipeline_widget->graph) return;
+      pipeline_srv->reqStopPipeline(pipeline_widget->graph-> getPipelineName());
+  }
+
 
 } // end namespace vino_pipeline_graph
 

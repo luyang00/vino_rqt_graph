@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vino_pipeline_graph)
 set(CMAKE_CXX_FLAGS "-std=c++0x")
-find_package(catkin REQUIRED COMPONENTS rviz vino_param_lib)
+find_package(catkin REQUIRED COMPONENTS rviz vino_param_lib2 pipeline_srv_msgs)
 catkin_package()
 include_directories(${catkin_INCLUDE_DIRS}  ${vino_param_lib_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
@@ -34,6 +34,7 @@ set(SRC_FILES
   src/main_panel.cpp
   src/graph_panel.cpp
   src/base_graph_node.cpp
+  src/service/pipeline_service.cpp
 )
 
 ## An rviz plugin is just a shared library, so here we declare the

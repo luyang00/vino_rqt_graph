@@ -188,6 +188,8 @@ void ParamManager::print() const
 
 void ParamManager::parse(std::string path)
 {
+  pipelines_.clear();
+
   std::ifstream fin(path);
   if (fin.fail())
   {
@@ -202,6 +204,14 @@ void ParamManager::parse(std::string path)
   //return pipelines_.size();
 }
 
+void ParamManager::parseConfs(std::string path)
+{
+  infers_supported.clear();
+  std::ifstream fin(path);
+  YAML::Node doc = YAML::Load(fin);
+  YAML_PARSE(doc, "infers", infers_supported);
+
+}
 std::vector<std::string> ParamManager::getPipelineNames() const
 {
   std::vector<std::string> names;
@@ -376,6 +386,8 @@ void ParamManager::save(const ParamManager::PipelineParams& pipeline,
 void ParamManager::save( const std::vector<ParamManager::PipelineParams> & pipelines,
                          const std::string& path)
 {
+  this->pipelines_.clear();
+  this->pipelines_.assign(pipelines.begin(), pipelines.end());//将v2赋值给v1)
   std::ofstream fout(path);
   YAML::Emitter out(fout);
 
@@ -388,4 +400,30 @@ out<< YAML::BeginSeq;
   out<< YAML::EndSeq;
 }
 
+
+std::string ParamManager::toString()
+{
+  // std::vector<PipelineParams> pipelines;
+  // pipelines.push_back(pipeline);
+  
+  std::ostringstream fout;
+  YAML::Emitter out(fout);
+
+  fout << "Pipelines:" << std::endl;
+  out<< YAML::BeginSeq;
+  for (int i=0;i< pipelines_.size();i++)
+  {
+    std::cout << "i: " << i << std::endl;
+    out << pipelines_[i];
+  }
+  out<< YAML::EndSeq;
+
+
+
+
+
+  auto pipeline_desc = fout.str();
+  return pipeline_desc;
+
+}
 }  // namespace Params

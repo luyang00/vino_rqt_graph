@@ -31,7 +31,7 @@ namespace vino_pipeline_graph{
             Input = 0,
             Infer = 1,
             Output =2 ,
-            Root = -1
+
         }NodeType;
         
         typedef struct 

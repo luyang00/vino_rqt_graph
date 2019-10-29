@@ -1,6 +1,0 @@
- <!DOCTYPE RCC><RCC version="1.0">
- <qresource>
-     <file>classes/addIcon.ico</file>
-      <file>classes/Teleop.png</file>
- </qresource>
- </RCC> 
