@@ -80,7 +80,7 @@ public Q_SLOTS:
   virtual void paintEvent( QPaintEvent* event );
 
 private Q_SLOTS:
-  void selectPipelineHandler(void);
+  void selectPipelineHandler(int);
   void addNodeBtnHandler(void);
   void addEdgeBtnHandler(void);
   void removeBtnHandler(void);
@@ -89,14 +89,17 @@ private Q_SLOTS:
   void updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params);
   void clearAttributeDisplay(void);
   void applyChangeBtnHandler(void);
-  void createPipelineFromExamplesHandler(void);
+  void loadMenuExamplesHandler(void);
   void createPipelineHandler(void);
+  void removePipelineHandler(void);
   void startPipelineHandler(void);
   void pausePipelineHandler(void);
   void stopPipelineHandler(void);
 
   void selectModelTypeHandler(int index);
   void selectNodeTypeHandler(int index);
+
+  void parseExampleHandler(QAction *action);
 protected:
     QVBoxLayout* main_layout;
     QVBoxLayout* attribute_layout;
@@ -113,7 +116,7 @@ private:
   QPushButton * btn_addNode;
   QPushButton * btn_addEdge;
   QPushButton * btn_remove;
-  QPushButton * btn_load_pipeline;
+
   QPushButton * btn_save_pipeline;
 
   QComboBox * combo_pipeline_names;
@@ -162,6 +165,16 @@ private:
   QLabel * label_node_output_type;
   QComboBox  *combo_node_output_type;
 
+
+
+  //Add_btn 
+  QMenu *menu;
+  QMenu *menu_create_from_example;
+  QAction *act_create_from_new;
+  QAction *act_load_from_file;
+  void initMenuBtn(void);
+  void loadPipeline(std::string filename);
+ 
 //   QLineEdit* output_topic_editor_;
 
 //   // The current name of the output topic.

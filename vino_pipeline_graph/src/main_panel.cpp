@@ -18,60 +18,23 @@ MainPanel::MainPanel( QWidget* parent )
   : rviz::Panel( parent )
 {
   
-  //locate rviz resources file path
-  QString resource_path_prefix = QCoreApplication::applicationDirPath () + "/../share/rviz/icons/";
 
-
-  std::cout << "QT: "<< resource_path_prefix.toStdString()<< std::endl;
   main_layout = new QVBoxLayout;
-
-
-  // Next we lay out the "output topic" text entry field using a
-  // QLabel and a QLineEdit in a QHBoxLayout.
   
   controller_layout = new QHBoxLayout;
-  
-
-   
-  btn_load_pipeline = new QPushButton("Load");
-  btn_save_pipeline = new QPushButton("Save");
-  connect(btn_load_pipeline, SIGNAL (released()), this, SLOT (loadPipelineBtnHandler()));
-  connect(btn_save_pipeline, SIGNAL (released()), this, SLOT (savePipelineBtnHandler()));
-
-  controller_layout ->addWidget( btn_load_pipeline);
-  controller_layout ->addWidget(btn_save_pipeline );
 
   controller_layout->addWidget( new QLabel( "pipeline:" ));
   combo_pipeline_names = new QComboBox();
-  //to-do change path
-
-
-  connect(combo_pipeline_names, SIGNAL (activated(int)), this, SLOT (selectPipelineHandler()));
+  connect(combo_pipeline_names, SIGNAL (currentIndexChanged(int)), this, SLOT (selectPipelineHandler(int)));
   controller_layout->addWidget( combo_pipeline_names);
 
-  btn_add_pipeline=new QPushButton();
-  QPixmap pix_add(resource_path_prefix + "plus.png");
-  btn_add_pipeline->setToolTip( "Add a new pipeline" );
-  btn_add_pipeline->setIcon(QIcon(pix_add));
-  controller_layout->addWidget(btn_add_pipeline);
-  QMenu *menu = new QMenu(this);
-  
-  QMenu *menu_create_from_example = new QMenu("create from examples");
-  QAction *act_create_from_new = new QAction(menu);
-  act_create_from_new->setText(QString("create a new pipeline"));  
-  menu->addMenu(menu_create_from_example);
-  menu->addAction(act_create_from_new);
+  initMenuBtn();
+
+  btn_save_pipeline = new QPushButton("Save");
+  connect(btn_save_pipeline, SIGNAL (released()), this, SLOT (savePipelineBtnHandler()));
+  controller_layout ->addWidget(btn_save_pipeline );
 
 
-  btn_add_pipeline->setMenu(menu);
-  connect(menu_create_from_example, SIGNAL (triggered()), this, SLOT (createPipelineFromExamplesHandler()));
-  connect(act_create_from_new, SIGNAL (triggered()), this, SLOT (createPipelineHandler()));
-
-
-  btn_del_pipeline=new QPushButton();
-  QPixmap pix_del(resource_path_prefix + "minus.png");
-  btn_del_pipeline->setIcon(QIcon(pix_del));
-  controller_layout->addWidget(btn_del_pipeline);
 
   btn_startPipeline = new QPushButton("Start");
   btn_pausePipeline = new QPushButton("Pause");
@@ -223,6 +186,49 @@ MainPanel::MainPanel( QWidget* parent )
 }
 
 
+void MainPanel::initMenuBtn(void)
+{
+
+    //locate rviz resources file path
+  QString resource_path_prefix = QCoreApplication::applicationDirPath () + "/../share/rviz/icons/";
+
+
+  std::cout << "QT: "<< resource_path_prefix.toStdString()<< std::endl;
+
+  btn_add_pipeline=new QPushButton();
+  QPixmap pix_add(resource_path_prefix + "plus.png");
+  btn_add_pipeline->setToolTip( "Add a new pipeline" );
+  btn_add_pipeline->setIcon(QIcon(pix_add));
+  controller_layout->addWidget(btn_add_pipeline);
+
+  menu = new QMenu(this);
+  act_load_from_file = new QAction(menu);
+  act_create_from_new = new QAction(menu);
+  menu_create_from_example = new QMenu("create from examples");
+  
+
+  act_load_from_file->setText(QString("load from a pipeline file(*.yaml)"));
+  act_create_from_new->setText(QString("create a new pipeline"));  
+
+
+  menu->addAction(act_load_from_file);
+  menu->addSeparator();
+  menu->addAction(act_create_from_new);
+  menu->addMenu(menu_create_from_example);
+  btn_add_pipeline->setMenu(menu);
+
+  connect(act_load_from_file, SIGNAL (triggered()), this, SLOT (loadPipelineBtnHandler()));
+  connect(menu_create_from_example, SIGNAL (aboutToShow()), this, SLOT (loadMenuExamplesHandler()));
+  connect(act_create_from_new, SIGNAL (triggered()), this, SLOT (createPipelineHandler()));
+
+
+  btn_del_pipeline=new QPushButton();
+  QPixmap pix_del(resource_path_prefix + "minus.png");
+  btn_del_pipeline->setIcon(QIcon(pix_del));
+  controller_layout->addWidget(btn_del_pipeline);
+  connect(btn_del_pipeline,SIGNAL(released()),this,SLOT(removePipelineHandler()));
+}
+
 
 void MainPanel::updateAttributeDisplay(vino_pipeline_graph::Node::NodeParams params)
 {
@@ -313,24 +319,28 @@ void MainPanel::load( const rviz::Config& config )
 
 void MainPanel::loadPipelineBtnHandler(void)
 {
-  std::string file_name = QFileDialog::getOpenFileName(NULL,"Load pipeline file(*.yaml)",".","*.yaml").toStdString();
+  std::string filename = QFileDialog::getOpenFileName(NULL,"Load pipeline file(*.yaml)",".","*.yaml").toStdString();
 
-  auto pipeline_names = pipeline_widget->loadPipeline(file_name);
-  combo_pipeline_names->clear();
-  for(int i=0; i<pipeline_names.size();i++)
-      combo_pipeline_names->addItem(QString::fromStdString(pipeline_names[i]));
+  loadPipeline(filename);
 
 }
-
-void MainPanel::createPipelineFromExamplesHandler(void)
+void MainPanel::loadPipeline(std::string filename)
 {
-  std::cout << "call" << std::endl;
+  auto pipeline_names = pipeline_widget->loadPipeline(filename);
+  //combo_pipeline_names->clear();
+  for(int i=0; i<pipeline_names.size();i++)
+      combo_pipeline_names->addItem(QString::fromStdString(pipeline_names[i]));
   
-  std::string path = ros::package::getPath("vino_launch") + "/param";
+  auto current_pipelines = combo_pipeline_names->count() - 1;
+  combo_pipeline_names->setCurrentIndex(current_pipelines);
+
+}
+void MainPanel::loadMenuExamplesHandler(void)
+{
+  
+  std::string path = ros::package::getPath("vino_launch") + "/param/";
 
   QDir source(QString::fromStdString(path));
-  //   if (!source.exists())
-  //       return;
 
   if(!source.exists())
   {
@@ -338,19 +348,29 @@ void MainPanel::createPipelineFromExamplesHandler(void)
     messageBox.critical(0,"Pipeline examples not found!","Please check vino_launch package and vino_launch/param/ exist");
     return;
   }
+  else{
 
-  QStringList const files = source.entryList(QStringList() << "*.yaml", QDir::Files);
-  for( auto & f : files)
-  {
-     std::cout << f.toStdString() << std::endl;
-  }
   
-
-  // using package::V_string;
-  // V_string packages;
-  // ros::package::getAll(packages);
+      QStringList const files = source.entryList(QStringList() << "*.yaml", QDir::Files);
+      
+      if(menu_create_from_example->actions().size() >=files.size()) return ;
+      for( auto & f : files)
+      {
+        auto filename = path + f.toStdString();
+        menu_create_from_example->addAction(f, [this,filename](){this->loadPipeline(filename);});
+      }
+  } 
 }
 
+
+void MainPanel::removePipelineHandler(void)
+{
+    int index =  combo_pipeline_names->currentIndex();
+    
+    pipeline_widget->graphs.erase(pipeline_widget->graphs.begin() + index);
+    combo_pipeline_names->removeItem(index);
+    
+}
 void MainPanel::createPipelineHandler(void)
 {
   
@@ -403,14 +423,22 @@ void MainPanel::createPipelineHandler(void)
 
     
 }
-void MainPanel::selectPipelineHandler(void)
+void MainPanel::selectPipelineHandler(int)
 {
  
     int index =  combo_pipeline_names->currentIndex();
-    std::cout << "select " << index << std::endl;
-    pipeline_widget->graph = pipeline_widget->graphs[index];
-    pipeline_widget->isResize = true;
-    pipeline_widget->draw();    
+    std::cout << "index select: " << index << std::endl;
+    if(index >= 0)
+    { 
+      pipeline_widget->graph = pipeline_widget->graphs[index];
+      pipeline_widget->isResize = true;
+      pipeline_widget->draw();    
+    }
+    else
+    {
+      pipeline_widget->graph = NULL;
+      pipeline_widget->draw();
+    }
   
   
 

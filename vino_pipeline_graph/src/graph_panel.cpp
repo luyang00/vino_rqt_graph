@@ -111,16 +111,30 @@ void PipelinePaintWidget::savePipeline(std::string file_path)
 }
 void PipelinePaintWidget::paintEvent( QPaintEvent* event )
 {
-    if(!graph) return;
 
     QSize window_size = this->size(); 
-    //  std::cout << "!!!!!!!!" << "paint event" <<  
-    // window_size.width() << " , " <<window_size.height()<< std::endl;
+    QPainter painter(this);
+
+
+
+
+
+    if(!graph)
+    {
+        painter.setPen(Qt::white);
+        painter.setBrush(Qt::white);
+        painter.drawRect(0,0,window_size.width(),window_size.height());
+        return;
+    }
+    
     if(window_size.width()<50 || window_size.height()<200){
-        QPainter painter(this);
         painter.setPen(Qt::blue);
         painter.drawText(5,5,"Resize to view it.");
+        painter.drawText(5,5,"Resize to view it.");
+    
     }
+
+
     graph->setCanvasSize(window_size.width(),window_size.height());
 
     if(isResize) 
