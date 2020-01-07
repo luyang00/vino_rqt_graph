@@ -1,0 +1,155 @@
+infers:
+
+- name: ObjectDetection
+
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: CPU
+  label: to/be/set/xxx.labels
+  batch: 1
+  confidence_threshold: 0.5
+  enable_roi_constraint: true # set enable_roi_constraint to false if you don't want to make the inferred ROI (region of interest) constrained into the camera frame
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [StandardCamera, RealSenseCamera, RealSenseCameraTopic]
+  connect_to: [FaceDetection, AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation, ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+
+
+- name: ObjectDetection_yolov2
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: CPU
+  label: to/be/set/xxx.labels
+  batch: 1
+  confidence_threshold: 0.5
+  enable_roi_constraint: true # set enable_roi_constraint to false if you don't want to make the inferred ROI (region of interest) constrained into the camera frame
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [StandardCamera, RealSenseCamera, RealSenseCameraTopic]
+  connect_to: [FaceDetection, AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation, ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+- name: FaceDetection
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: MYRIAD
+  label: /opt/openvino_toolkit/models/face_detection/output/FP16/Transportation/object_detection/face/pruned_mobilenet_reduced_ssd_shared_weights/dldt/face-detection-adas-0001-fp16.labels
+  batch: 1
+  confidence_threshold: 0.5
+  enable_roi_constraint: true # set enable_roi_constraint to false if you don't want to make the inferred ROI (region of interest) constrained into the camera frame
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [StandardCamera, RealSenseCamera, RealSenseCameraTopic]
+  connect_to: [FaceDetection, AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation,ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+- name: AgeGenderRecognition
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [FaceDetection]
+  connect_to: [ AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation,ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+- name: EmotionRecognition
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: CPU
+  label: /opt/openvino_toolkit/models/emotions-recognition/output/FP32/Retail/object_attributes/emotions_recognition/0003/dldt/emotions-recognition-retail-0003.labels
+  batch: 16
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [FaceDetection]
+  connect_to: [ AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation,ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+- name: HeadPoseEstimation
+  available_models:
+  - name: MobileNetSSD
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: CPU
+  label: to/be/set/xxx.labels
+  batch: 16
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [FaceDetection]
+  connect_to: [AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation,ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+- name: Segmentation
+  available_models:
+  - name: yolov2
+    model: /opt/intel/computer_vision_sdk/deployment_tools/model_downloader/object_detection/common/mobilenet-ssd/caffe/output/FP32/mobilenet-ssd.xml
+    engine: CPU
+    label: to/be/set/xxx.labels
+    batch: 16
+  engine: CPU
+  label: to/be/set/xxx.labels
+  batch: 1
+  confidence_threshold: 0.5
+  download_link: https://www.test.com
+  download_status: false
+  connect_from: [StandardCamera, RealSenseCamera, RealSenseCameraTopic]
+  connect_to: [FaceDetection, AgeGenderRecognition, EmotionRecognition, HeadPoseEstimation, Segmentation,ImageWindow, Rviz, Rostopic]
+  available_engine: [CPU,GPU,MyriadX]
+
+
+
+

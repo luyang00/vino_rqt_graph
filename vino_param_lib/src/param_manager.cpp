@@ -94,6 +94,36 @@ void operator>>(const YAML::Node& node,
   }
 }
 
+void operator>>(const YAML::Node& node, Params::ParamManager::InferenceDesc& infer)
+{
+  YAML_PARSE(node, "name", infer.infer_name);
+
+  YAML_PARSE(node, "available_models", infer.available_models)
+  // YAML_PARSE(node, "engine", infer.params.engine)
+  // YAML_PARSE(node, "label", infer.params.label)
+  YAML_PARSE(node, "download_link", infer.download_link)
+  YAML_PARSE(node, "download_status", infer.download_status)
+  YAML_PARSE(node, "connect_from",infer.connect_from);
+  YAML_PARSE(node, "connect_to",infer.connect_to);
+  YAML_PARSE(node, "available_engine", infer.available_engine);
+  slog::info << "Inference Params:name=" << infer.infer_name << slog::endl;
+}
+
+void operator>>(const YAML::Node& node,
+                std::vector<ParamManager::InferenceDesc>& list)
+{
+  slog::info << "Inferences size: " << node.size() << slog::endl;
+  for (unsigned i = 0; i < node.size(); i++)
+  {
+    ParamManager::InferenceDesc temp_inf;
+    node[i] >> temp_inf;
+    list.push_back(temp_inf);
+  }
+}
+
+
+
+
 void operator>>(const YAML::Node& node, ParamManager::InferenceParams& infer)
 {
   YAML_PARSE(node, "name", infer.name)
@@ -211,6 +241,13 @@ void ParamManager::parseConfs(std::string path)
   YAML::Node doc = YAML::Load(fin);
   YAML_PARSE(doc, "infers", infers_supported);
 
+}
+void ParamManager::parseSupoortedInfers(std::string path)
+{
+  infers_supported.clear();
+  std::ifstream fin(path);
+  YAML::Node doc = YAML::Load(fin);
+  YAML_PARSE(doc, "infers", infers_supported);
 }
 std::vector<std::string> ParamManager::getPipelineNames() const
 {

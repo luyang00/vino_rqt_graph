@@ -17,6 +17,9 @@
  * @brief A header file with declaration for parameter management
  * @file param_manager.hpp
  */
+
+
+
 #ifndef VINO_PARAM_LIB_PARAM_MANAGER_H
 #define VINO_PARAM_LIB_PARAM_MANAGER_H
 
@@ -50,12 +53,13 @@ class ParamManager  // singleton
    * The instance will be created when first call.
    * @return The reference of paramManager class.
    */
+  
   static ParamManager& getInstance()
   {
     static ParamManager manager_;
     return manager_;
   }
-
+  
   /**
    * @brief Dump all parameters into slog out.
    * @return None.
@@ -79,6 +83,20 @@ class ParamManager  // singleton
                       name(name),engine(engine),model(model),label(label){};
     InferenceParams(){}
   };
+
+  typedef struct InferenceDesc {
+    // struct InferenceParams params;
+    std::string infer_name;
+    std::vector<InferenceParams> available_models;
+    std::string download_link;
+    bool download_status;
+    std::vector<std::string> connect_from;
+    std::vector<std::string> connect_to;
+    std::vector<std::string> available_engine;
+  } InferenceDesc;
+
+
+
   struct PipelineParams
   {
     std::string name;
@@ -103,6 +121,7 @@ class ParamManager  // singleton
    */
   void parse(std::string path);
   void parseConfs(std::string path);
+  void parseSupoortedInfers(std::string path);
   void save(const ParamManager::PipelineParams& pipeline,
                     const std::string& path);
                     
@@ -133,7 +152,15 @@ class ParamManager  // singleton
   PipelineParams getPipeline(const std::string& name) const;
 
 
-  std::vector<InferenceParams> getInfersSupported() const
+  std::vector<InferenceParams> getInfersSupported() 
+  {
+    //To-do: remove this function
+    // std::vector<InferenceParams> 
+    // return infers_supported;
+    std::vector<InferenceParams> v;
+    return v;
+  }
+  std::vector<InferenceDesc> getAllInfersSupported() 
   {
     return infers_supported;
   }
@@ -156,7 +183,7 @@ class ParamManager  // singleton
   void operator=(ParamManager const&);
 
   std::vector<PipelineParams> pipelines_;
-  std::vector<InferenceParams> infers_supported;
+  std::vector<InferenceDesc> infers_supported;
   CommonParams common_;
 };
 

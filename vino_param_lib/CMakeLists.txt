@@ -13,16 +13,21 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(vino_param_lib2)
+project(vino_param_lib)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslint
 )
+## Both Boost.python and Python libs are required.
+find_package(Boost REQUIRED COMPONENTS python)
+find_package(PythonLibs 2.7 REQUIRED)
+
+catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} param_manager_wrapper
   CATKIN_DEPENDS roscpp roslint
 )
 
@@ -33,11 +38,16 @@ include_directories(
 
 include_directories(
   include
+  ${Boost_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
   ${yaml_cpp_vendor_DIR}/../../../opt/yaml_cpp_vendor/include)
 
 add_library(${PROJECT_NAME} SHARED
   src/param_manager.cpp
   )
+add_library(param_manager_wrapper SHARED
+  src/python_wrapper/param_manager_py_wrapper.cpp
+)
 
 add_dependencies(${PROJECT_NAME}
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -47,6 +57,12 @@ add_dependencies(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   yaml-cpp
+)
+
+target_link_libraries(param_manager_wrapper
+
+  ${PROJECT_NAME}
+  ${Boost_LIBRARIES}
 )
 
 # Flags
@@ -111,3 +127,9 @@ if(CATKIN_ENABLE_TESTING)
   roslint_cpp()
   roslint_add_test()
 endif()
+
+
+set_target_properties(param_manager_wrapper PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
+        )
